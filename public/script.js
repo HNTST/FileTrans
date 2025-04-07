@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Загрузка списка файлов при старте
     fetchFiles();
 
-    // Обработка формы загрузки
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -31,15 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             status.textContent = `File "${data.filename}" uploaded successfully!`;
-            fileInput.value = ''; // Очистка поля
-            fetchFiles(); // Обновление списка файлов
+            fileInput.value = '';
+            fetchFiles();
         } catch (error) {
             status.textContent = `Error: ${error.message}`;
         }
     });
 });
 
-// Получение и отображение списка файлов
 async function fetchFiles() {
     try {
         const response = await fetch('/files');
@@ -50,26 +47,28 @@ async function fetchFiles() {
         }
 
         const data = await response.json();
+        console.log('Данные от сервера:', data); // Для отладки
 
-        // Если вернулся объект с сообщением
-        if (data.message) {
+        // Проверяем, является ли data массивом
+        let files = Array.isArray(data) ? data : data.files || data.data || [];
+
+        if (!files.length || data.message === "No files available") {
             fileList.innerHTML = '<li>No files available</li>';
             return;
         }
 
-        // Отображение списка файлов
         fileList.innerHTML = '';
-        data.forEach(file => {
+        files.forEach(file => {
             const li = document.createElement('li');
             const a = document.createElement('a');
             a.href = `/download/${file.id}`;
             a.textContent = `${file.filename} (ID: ${file.id})`;
-            a.download = file.filename; // Указываем имя файла для скачивания
+            a.download = file.filename;
             li.appendChild(a);
             fileList.appendChild(li);
         });
     } catch (error) {
         console.error('Error fetching files:', error);
-        document.getElementById('fileList').innerHTML = '<li>Error loading files</li>';
+        fileList.innerHTML = '<li>Error loading files</li>';
     }
 }

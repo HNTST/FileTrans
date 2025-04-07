@@ -1,6 +1,9 @@
 package database
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 func GetAllFiles(db *gorm.DB) ([]File, error) {
 	const op = "GET_ALL_FILES_DATABASE"
@@ -21,4 +24,12 @@ func GetFileByID(db *gorm.DB, id string) (File, error) {
 		return File{}, err
 	}
 	return file, nil
+}
+
+func CheckUUIDInDB(db *gorm.DB, uuID uuid.UUID) bool {
+	var files File
+	if err := db.Select("uuid").Find(&files).Error; err != gorm.ErrRecordNotFound {
+		return false
+	}
+	return true
 }

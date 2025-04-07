@@ -3,6 +3,7 @@ package server
 import (
 	db "file-transfer/internal/database"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -45,10 +46,20 @@ func (s *Server) UploadFile(c *gin.Context) {
 		JSONError(c, http.StatusInternalServerError, "Не удалось сохранить файл")
 		return
 	}
+	uniqueID, _ := uuid.NewUUID()
+
+	unique := false
+	for !unique {
+		if !db.CheckUUIDInDB(s.db, uniqueID) {
+			uniqueID, _ = uuid.NewUUID()
+			unique = true
+		}
+	}
 
 	dbFile := &db.File{
 		FilePath: path,
 		FileName: fileName,
+		UUID:     uniqueID,
 	}
 
 	if err := db.CreateFile(s.db, dbFile); err != nil {

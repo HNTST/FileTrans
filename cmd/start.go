@@ -7,7 +7,7 @@ import (
 )
 
 func Start() {
-	initDatabase, err := database.InitDatabase()
+	initDatabase, err := database.NewDatabase()
 	if err != nil {
 		log.Fatal(err)
 	}
