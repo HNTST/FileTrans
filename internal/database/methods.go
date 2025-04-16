@@ -16,14 +16,14 @@ func GetAllFiles(db *gorm.DB) ([]File, error) {
 
 func CreateFile(db *gorm.DB, file *File) error {
 	return db.Create(file).Error
-}
+}	
 
-func GetFileByID(db *gorm.DB, id string) (File, error) {
-	var file File
-	if err := db.First(&file, id).Error; err != nil {
-		return File{}, err
-	}
-	return file, nil
+func GetFileByID(db *gorm.DB, uuid string) (File, error) {
+    var file File
+    if err := db.Where("uuid = ?", uuid).First(&file).Error; err != nil {
+        return File{}, err
+    }
+    return file, nil
 }
 
 func CheckUUIDInDB(db *gorm.DB, uuID uuid.UUID) bool {
@@ -33,3 +33,5 @@ func CheckUUIDInDB(db *gorm.DB, uuID uuid.UUID) bool {
 	}
 	return true
 }
+
+
