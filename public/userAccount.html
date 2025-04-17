@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Account</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome for icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom Styles -->
+    <style>
+      /* Градиентный фон страницы */
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(270deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+        background-size: 600% 600%;
+        animation: gradientAnimation 15s ease infinite;
+        overflow-x: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      @keyframes gradientAnimation {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      /* Стили для контейнера */
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        width: 100%;
+        max-width: 1200px;
+        position: relative;
+        padding: 40px 20px;
+      }
+
+      /* Общие стили для островков */
+      .island {
+        background: rgba(255, 255, 255, 0.92);
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* Основной островок */
+      .main-island {
+        width: 80%;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* Заголовки */
+      h1 {
+        font-weight: 700;
+        color: #5577cc;
+        margin-bottom: 25px;
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        font-weight: 600;
+        color: #5577cc;
+        margin-bottom: 20px;
+        font-size: 1.7rem;
+      }
+
+      /* User info section */
+      .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a6c1ee, #5577cc);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        margin-right: 20px;
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        text-align: left;
+        flex-grow: 1;
+      }
+
+      .username {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #4466bb;
+        margin-bottom: 5px;
+      }
+
+      .storage-info {
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .storage-bar {
+        height: 8px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      .storage-progress {
+        height: 100%;
+        background: linear-gradient(to right, #a6c1ee, #5577cc);
+        border-radius: 4px;
+        width: 35%; /* Set dynamically based on usage */
+      }
+
+      /* Стили для формы */
+      #uploadForm {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: rgba(243, 246, 252, 0.8);
+        border-radius: 12px;
+        border: 2px dashed #a6c1ee;
+      }
+
+      .upload-icon {
+        font-size: 2rem;
+        color: #5577cc;
+        margin-bottom: 10px;
+      }
+
+      input[type="file"] {
+        margin-bottom: 15px;
+        padding: 12px;
+        border: 2px dashed #a6c1ee;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Прогресс-бар */
+      progress {
+        height: 12px;
+        border-radius: 6px;
+        margin: 15px 0;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      progress::-webkit-progress-bar {
+        background-color: rgba(230, 230, 230, 0.5);
+        border-radius: 6px;
+      }
+
+      progress::-webkit-progress-value {
+        background: linear-gradient(to right, #ff9a9e, #ff6b6b);
+        border-radius: 6px;
+      }
+
+      progress::-moz-progress-bar {
+        background: linear-gradient(to right, #ff9a9e, #ff6b6b);
+        border-radius: 6px;
+      }
+
+      /* Кнопки */
+      .btn {
+        padding: 12px 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, #a6c1ee, #5577cc);
+        border: none;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(to right, #8eafe6, #4466bb);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(to right, #fbc2eb, #a18cd1);
+        border: none;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: linear-gradient(to right, #f9b0e4, #967ac8);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-outline-primary {
+        border: 2px solid #5577cc;
+        color: #5577cc;
+        background: transparent;
+      }
+
+      .btn-outline-primary:hover {
+        background-color: #5577cc;
+        color: white;
+      }
+
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+
+      /* Список файлов */
+      .files-container {
+        margin-top: 30px;
+      }
+
+      .files-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px 10px;
+        border-bottom: 2px solid #eaeaea;
+        font-weight: 600;
+        color: #5577cc;
+      }
+
+      .file-list {
+        max-height: 350px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 10px;
+      }
+
+      .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.3s;
+      }
+
+      .file-item:hover {
+        background-color: rgba(243, 246, 252, 0.8);
+      }
+
+      .file-item:last-child {
+        border-bottom: none;
+      }
+
+      .file-info {
+        display: flex;
+        align-items: center;
+        text-align: left;
+      }
+
+      .file-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #f0f4ff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        color: #5577cc;
+      }
+
+      .file-details span {
+        display: block;
+      }
+
+      .file-name {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .file-meta {
+        font-size: 0.8rem;
+        color: #777;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* QR код и модальное окно */
+      #qrCodeCanvas {
+        margin: 0 auto 20px;
+        display: block;
+        padding: 15px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .modal-content {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header {
+        background: linear-gradient(to right, #a6c1ee, #5577cc);
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        border-bottom: none;
+      }
+
+      .modal-body {
+        padding: 25px;
+      }
+
+      /* Toast Notifications */
+      .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+
+      .toast {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .toast-header {
+        background-color: rgba(166, 193, 238, 0.3);
+        border-bottom: none;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      /* Сообщения об ошибках */
+      .error-message {
+        color: #ff6b6b;
+        font-weight: 500;
+        margin-top: 5px;
+      }
+
+      /* Навигация */
+      .nav-buttons {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+      }
+
+      /* Адаптивность */
+      @media (max-width: 992px) {
+        .container {
+          padding: 20px;
+        }
+
+        .main-island {
+          width: 95%;
+        }
+
+        .user-info {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .user-avatar {
+          margin-right: 0;
+          margin-bottom: 15px;
+        }
+
+        .user-details {
+          text-align: center;
+        }
+
+        .file-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .file-actions {
+          width: 100%;
+          justify-content: center;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Основной островок -->
+      <div class="main-island island">
+        <div class="nav-buttons">
+          <a href="/index.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-home"></i> Главная
+          </a>
+          <button id="logoutBtn" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sign-out-alt"></i> Выйти
+          </button>
+        </div>
+
+        <h1>Личный кабинет</h1>
+
+        <!-- Информация о пользователе -->
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="user-details">
+            <div class="username" id="userName">Username</div>
+            <div class="storage-info">
+              Использовано <span id="usedStorage">0.35</span> GB из
+              <span id="totalStorage">1</span> GB
+              <div class="storage-bar">
+                <div class="storage-progress" id="storageProgressBar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Форма загрузки файлов -->
+        <form id="uploadForm">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <h3>Загрузить новый файл</h3>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".jpg,.jpeg,.png,.pdf,.zip,.mp4,.mp3,.docx,.xlsx"
+            class="form-control mb-3"
+            required
+          />
+          <small class="text-muted"
+            >Supported formats: JPG, PNG, PDF, ZIP, MP4, MP3, DOCX, XLSX. Max
+            size: 1GB.</small
+          >
+          <p id="fileSizeError" class="error-message" style="display: none">
+            File size exceeds the limit of 1GB.
+          </p>
+          <progress
+            id="progressBar"
+            class="w-100"
+            value="0"
+            max="100"
+            style="display: none"
+          ></progress>
+          <button type="submit" class="btn btn-primary w-100">
+            Загрузить файл
+          </button>
+        </form>
+
+        <!-- Список файлов пользователя -->
+        <div class="files-container">
+          <h2>Мои файлы</h2>
+          <div class="files-header">
+            <div>Название</div>
+            <div>Действия</div>
+          </div>
+          <div id="fileList" class="file-list">
+            <!-- Файлы будут загружены сюда -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно с QR кодом и ссылкой -->
+    <div
+      class="modal fade"
+      id="shareModal"
+      tabindex="-1"
+      aria-labelledby="shareModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="shareModalLabel">Поделиться файлом</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center">
+            <canvas id="qrCodeCanvas" width="200" height="200"></canvas>
+            <div class="input-group mb-3">
+              <input type="text" id="shareLink" class="form-control" readonly />
+              <button
+                class="btn btn-outline-primary"
+                type="button"
+                id="copyLinkBtn"
+              >
+                <i class="fas fa-copy"></i> Копировать
+              </button>
+            </div>
+            <button class="btn btn-primary w-100" id="downloadBtn">
+              <i class="fas fa-download"></i> Скачать
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="statusToast" class="toast" role="alert">
+        <div class="toast-header">
+          <strong class="me-auto">Уведомление</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+        <div class="toast-body">Операция выполнена успешно!</div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <!-- Custom Script -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Elements
+        const userName = document.getElementById("userName");
+        const usedStorage = document.getElementById("usedStorage");
+        const totalStorage = document.getElementById("totalStorage");
+        const storageProgressBar =
+          document.getElementById("storageProgressBar");
+        const uploadForm = document.getElementById("uploadForm");
+        const fileInput = document.getElementById("fileInput");
+        const fileSizeError = document.getElementById("fileSizeError");
+        const progressBar = document.getElementById("progressBar");
+        const fileList = document.getElementById("fileList");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const shareModal = new bootstrap.Modal(
+          document.getElementById("shareModal")
+        );
+        const qrCodeCanvas = document.getElementById("qrCodeCanvas");
+        const shareLinkInput = document.getElementById("shareLink");
+        const copyLinkBtn = document.getElementById("copyLinkBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        // Set user info (this would typically come from your backend)
+        const userInfo = {
+          name: "UserName123",
+          usedStorageGB: 0.35,
+          totalStorageGB: 1,
+        };
+
+        // Update user interface with actual data
+        userName.textContent = userInfo.name;
+        usedStorage.textContent = userInfo.usedStorageGB.toFixed(2);
+        totalStorage.textContent = userInfo.totalStorageGB;
+
+        // Calculate and set storage progress bar
+        const storagePercentage =
+          (userInfo.usedStorageGB / userInfo.totalStorageGB) * 100;
+        storageProgressBar.style.width = `${storagePercentage}%`;
+
+        // Toast notification function
+        function showToast(message) {
+          const toastBody = document.querySelector("#statusToast .toast-body");
+          toastBody.textContent = message;
+          const toast = new bootstrap.Toast(
+            document.getElementById("statusToast")
+          );
+          toast.show();
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+          if (bytes < 1024) return bytes + " B";
+          else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
+          else if (bytes < 1073741824)
+            return (bytes / 1048576).toFixed(2) + " MB";
+          else return (bytes / 1073741824).toFixed(2) + " GB";
+        }
+
+        // Get file icon based on file type
+        function getFileIcon(fileType) {
+          const iconMap = {
+            image: "fa-image",
+            pdf: "fa-file-pdf",
+            zip: "fa-file-archive",
+            video: "fa-file-video",
+            audio: "fa-file-audio",
+            word: "fa-file-word",
+            excel: "fa-file-excel",
+            default: "fa-file",
+          };
+
+          if (fileType.includes("image")) return iconMap.image;
+          if (fileType.includes("pdf")) return iconMap.pdf;
+          if (fileType.includes("zip")) return iconMap.zip;
+          if (fileType.includes("video") || fileType.includes("mp4"))
+            return iconMap.video;
+          if (fileType.includes("audio") || fileType.includes("mp3"))
+            return iconMap.audio;
+          if (fileType.includes("word") || fileType.includes("docx"))
+            return iconMap.word;
+          if (fileType.includes("excel") || fileType.includes("xlsx"))
+            return iconMap.excel;
+
+          return iconMap.default;
+        }
+
+        // Create share modal with QR code
+        function openShareModal(fileId, fileName) {
+          // Generate download link (would be created by your API)
+          const downloadUrl = `/download/${fileId}`;
+
+          // Update modal title
+          document.getElementById(
+            "shareModalLabel"
+          ).textContent = `Поделиться: ${fileName}`;
+
+          // Generate QR code
+          QRCode.toCanvas(
+            qrCodeCanvas,
+            downloadUrl,
+            { width: 200 },
+            (error) => {
+              if (error) console.error("QR Code generation failed:", error);
+            }
+          );
+
+          // Set share link
+          shareLinkInput.value = window.location.origin + downloadUrl;
+
+          // Set download button link
+          downloadBtn.onclick = () => {
+            window.location.href = downloadUrl;
+          };
+
+          // Show modal
+          shareModal.show();
+        }
+
+        // Copy link to clipboard
+        copyLinkBtn.addEventListener("click", () => {
+          shareLinkInput.select();
+          document.execCommand("copy");
+          showToast("Ссылка скопирована в буфер обмена!");
+        });
+
+        // Логаут (просто демонстрация, без реального выхода)
+        logoutBtn.addEventListener("click", () => {
+          showToast("Выход выполнен успешно");
+          setTimeout(() => {
+            window.location.href = "/index.html";
+          }, 1000);
+        });
+
+        // Handle file upload
+        uploadForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const file = fileInput.files[0];
+
+          if (!file) {
+            showToast("Пожалуйста, выберите файл!");
+            return;
+          }
+
+          if (file.size > 1024 * 1024 * 1024) {
+            fileSizeError.style.display = "block";
+            return;
+          } else {
+            fileSizeError.style.display = "none";
+          }
+
+          // Show progress bar
+          progressBar.style.display = "block";
+
+          // Simulate file upload (would be replaced with actual API call)
+          let progress = 0;
+          const uploadInterval = setInterval(() => {
+            progress += 5;
+            progressBar.value = progress;
+
+            if (progress >= 100) {
+              clearInterval(uploadInterval);
+
+              // Simulate server response
+              setTimeout(() => {
+                // Hide progress bar
+                progressBar.style.display = "none";
+
+                // Reset form
+                fileInput.value = "";
+
+                // Show success message
+                showToast(`Файл "${file.name}" успешно загружен!`);
+
+                // Refresh file list
+                fetchFiles();
+
+                // Update storage info (simulate)
+                const newUsed = Math.min(
+                  userInfo.usedStorageGB + file.size / 1073741824,
+                  userInfo.totalStorageGB
+                );
+                userInfo.usedStorageGB = newUsed;
+                usedStorage.textContent = newUsed.toFixed(2);
+                const newPercentage = (newUsed / userInfo.totalStorageGB) * 100;
+                storageProgressBar.style.width = `${newPercentage}%`;
+              }, 500);
+            }
+          }, 100);
+        });
+
+        // Fetch and display user files
+        async function fetchFiles() {
+          // This would be replaced with actual API call
+          // Simulate file list
+          const mockFiles = [
+            {
+              id: "f1",
+              name: "presentation.pptx",
+              type: "application/vnd.ms-powerpoint",
+              size: 2457600,
+              date: "2025-04-15T10:24:00",
+            },
+            {
+              id: "f2",
+              name: "report.pdf",
+              type: "application/pdf",
+              size: 1048576,
+              date: "2025-04-14T16:42:00",
+            },
+            {
+              id: "f3",
+              name: "vacation.jpg",
+              type: "image/jpeg",
+              size: 512000,
+              date: "2025-04-12T09:15:00",
+            },
+            {
+              id: "f4",
+              name: "project.zip",
+              type: "application/zip",
+              size: 15728640,
+              date: "2025-04-10T14:30:00",
+            },
+            {
+              id: "f5",
+              name: "music.mp3",
+              type: "audio/mp3",
+              size: 4194304,
+              date: "2025-04-08T11:20:00",
+            },
+          ];
+
+          // Clear current file list
+          fileList.innerHTML = "";
+
+          // Check if no files
+          if (mockFiles.length === 0) {
+            fileList.innerHTML = `
+              <div class="text-center py-4 text-muted">
+                <i class="fas fa-folder-open fa-2x mb-2"></i>
+                <p>У вас пока нет загруженных файлов</p>
+              </div>
+            `;
+            return;
+          }
+
+          // Display files
+          mockFiles.forEach((file) => {
+            const date = new Date(file.date);
+            const formattedDate =
+              date.toLocaleDateString() +
+              " " +
+              date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.innerHTML = `
+              <div class="file-info">
+                <div class="file-icon">
+                  <i class="fas ${getFileIcon(file.type)}"></i>
+                </div>
+                <div class="file-details">
+                  <span class="file-name">${file.name}</span>
+                  <span class="file-meta">${formatFileSize(
+                    file.size
+                  )} · ${formattedDate}</span>
+                </div>
+              </div>
+              <div class="file-actions">
+                <button class="btn btn-sm btn-outline-primary download-btn" data-id="${
+                  file.id
+                }">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary share-btn" data-id="${
+                  file.id
+                }" data-name="${file.name}">
+                  <i class="fas fa-share-alt"></i> Поделиться
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${
+                  file.id
+                }">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            `;
+
+            fileList.appendChild(fileItem);
+          });
+
+          // Add event listeners to buttons
+          document.querySelectorAll(".download-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const fileId = btn.getAttribute("data-id");
+              window.location.href = `/download/${fileId}`;
+            });
+          });
+
+          document.querySelectorAll(".share-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const fileId = btn.getAttribute("data-id");
+              const fileName = btn.getAttribute("data-name");
+              openShareModal(fileId, fileName);
+            });
+          });
+
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const fileId = btn.getAttribute("data-id");
+              if (confirm("Вы уверены, что хотите удалить этот файл?")) {
+                // Would make API call to delete file
+                btn.closest(".file-item").remove();
+                showToast("Файл успешно удален");
+
+                // Update storage info (simulate)
+                const newUsed = Math.max(userInfo.usedStorageGB - 0.05, 0);
+                userInfo.usedStorageGB = newUsed;
+                usedStorage.textContent = newUsed.toFixed(2);
+                const newPercentage = (newUsed / userInfo.totalStorageGB) * 100;
+                storageProgressBar.style.width = `${newPercentage}%`;
+              }
+            });
+          });
+        }
+
+        // Initialize file list
+        fetchFiles();
+      });
+    </script>
+  </body>
+</html>
