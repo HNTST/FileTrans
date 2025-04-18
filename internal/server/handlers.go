@@ -7,12 +7,91 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
 type Server struct {
 	db     *gorm.DB
 	router *gin.Engine
+}
+
+func (s *Server) SignUp(c *gin.Context) {
+	const op = "SING_UP"
+	var user db.User
+	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+		return
+	}
+
+	if user.Login == "" || user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверте поля логина и пароля, возможно они пусты"})
+		return
+	}
+	if db.CheckLoginInDB(s.db, user.Login) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Такой логин занят"})
+		return
+	}
+
+	uniqueID, _ := uuid.NewUUID()
+
+	_, unique := db.CheckUUIDUserInDB(s.db, uniqueID)
+	if unique {
+		uniqueID, _ = uuid.NewUUID()
+	}
+	user.UUID = uniqueID
+
+	if err := db.CreateUser(s.db, &user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Произошла ошибка создания нового пользователя, попробуйте снова"})
+		return
+	}
+}
+
+func (s *Server) SignIn(c *gin.Context) {
+	const op = "SING_IN"
+	var user db.User
+	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+		return
+	}
+	if user.Login == "" || user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверте поля логина и пароля, возможно они пусты"})
+		return
+	}
+
+	dbUser, err := db.GetUserByLOGIN(s.db, user.Login)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Что пошло не так"})
+		log.Printf("Ошибка в получении логина из датабазы: %v", err)
+		return
+	}
+
+	if dbUser.Password == user.Password {
+		c.JSON(http.StatusOK, gin.H{"message": "Успешный вход"})
+		return
+	}
+}
+
+func (s *Server) GetFilesByUser(c *gin.Context) {
+	const op = "GET_USER'S_ FILES"
+	var user db.User
+
+	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+		return
+	}
+
+	files, err := db.GetListFilesByUser(s.db, user.Login)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Произошла ошибка получения списка файлов"})
+		return
+	}
+	if len(files) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "У пользователя нет сохранненых файлов"})
+		return
+	} else {
+		c.IndentedJSON(http.StatusOK, files)
+	}
 }
 
 func (s *Server) GetAllFiles(c *gin.Context) {
@@ -33,6 +112,9 @@ func (s *Server) GetAllFiles(c *gin.Context) {
 }
 
 func (s *Server) UploadFile(c *gin.Context) {
+	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
+		os.Mkdir("uploads", os.ModePerm)
+	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		JSONError(c, http.StatusBadRequest, "Не удалось получить файл")
@@ -48,12 +130,9 @@ func (s *Server) UploadFile(c *gin.Context) {
 	}
 	uniqueID, _ := uuid.NewUUID()
 
-	unique := false
-	for !unique {
-		if !db.CheckUUIDInDB(s.db, uniqueID) {
-			uniqueID, _ = uuid.NewUUID()
-			unique = true
-		}
+	err, unique := db.CheckUUIDFileInDB(s.db, uniqueID)
+	if unique {
+		uniqueID, _ = uuid.NewUUID()
 	}
 
 	dbFile := &db.File{

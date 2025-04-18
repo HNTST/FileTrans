@@ -24,6 +24,9 @@ func (s *Server) setupRoutes() {
 	s.router.POST("/upload", s.UploadFile)
 	s.router.GET("/files", s.GetAllFiles)
 	s.router.GET("/download/:id", s.DownloadFile)
+	s.router.POST("/register", s.SignUp)
+	s.router.GET("/usersFiles", s.GetFilesByUser)
+	s.router.POST("/signInPage", s.SignIn)
 }
 
 func (s *Server) Run(addr string) error {
