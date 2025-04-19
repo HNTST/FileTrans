@@ -24,5 +24,9 @@ func NewDatabase() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = db.db.AutoMigrate(&User{})
+	if err != nil {
+		return nil, err
+	}
 	return db.db, nil
 }
