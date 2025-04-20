@@ -10,10 +10,11 @@ type User struct {
 	UUID     uuid.UUID `json:"uuid" gorm:"uniqueIndex"`
 	Login    string    `json:"login" gorm:"uniqueIndex"`
 	Password string    `json:"password"`
-	Files    []File    `gorm:"foreignKey:UUID""`
+	Files    []File    `gorm:"foreignKey:UserUUID""`
 }
 type File struct {
 	gorm.Model
+	UserUUID uuid.UUID `json:"user_uuid"`
 	FilePath string    `json:"file_path"`
 	FileName string    `json:"file_name"`
 	UUID     uuid.UUID `json:"uuid" gorm:"uniqueIndex"`

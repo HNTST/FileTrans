@@ -135,7 +135,15 @@ func (s *Server) UploadFile(c *gin.Context) {
 		uniqueID, _ = uuid.NewUUID()
 	}
 
+	var user db.User
+
+	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+		return
+	}
+
 	dbFile := &db.File{
+		UserUUID: user.UUID,
 		FilePath: path,
 		FileName: fileName,
 		UUID:     uniqueID,
