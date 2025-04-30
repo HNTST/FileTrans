@@ -21,9 +21,6 @@ func Start() {
 
 	// Создание таблиц (миграция моделей)
 	log.Println("[DB_MIGRATE] Миграция моделей")
-	if err := initDatabase.AutoMigrate(&database.User{}, &database.File{}).Error; err != nil {
-		log.Fatalf("[DB_MIGRATE] Ошибка миграции: %v", err)
-	}
 
 	// Создание экземпляра сервера
 	log.Println("[SERVER_INIT] Инициализация сервера")

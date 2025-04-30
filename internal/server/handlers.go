@@ -1,12 +1,12 @@
 package server
 
 import (
-	"encoding/base64"
 	db "file-transfer/internal/database"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -139,47 +139,45 @@ func (s *Server) GetAllFiles(c *gin.Context) {
 func (s *Server) UploadFile(c *gin.Context) {
 	const op = "UPLOAD_FILE"
 
-	// Создание директории uploads, если её нет
+	// Создание директории uploads
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
-		log.Printf("[%s] Создаём папку uploads", op)
+		log.Printf("[%s] Создаем папку uploads", op)
 		if err := os.Mkdir("uploads", os.ModePerm); err != nil {
 			handleError(c, http.StatusInternalServerError, "Не удалось создать папку uploads", err)
 			return
 		}
 	}
 
-	// Парсим JSON из тела запроса
-	var req struct {
-		FileName string    `json:"fileName"` // Имя файла
-		UserUUID uuid.UUID `json:"userUuid"` // UUID пользователя
-		FileData string    `json:"fileData"` // Base64-кодированный контент файла
-	}
-
-	if err := parseJSONBody(c, &req); err != nil {
-		handleError(c, http.StatusBadRequest, "Невалидный JSON", err)
-		return
-	}
-
-	if req.FileName == "" || req.FileData == "" || req.UserUUID == uuid.Nil {
-		handleError(c, http.StatusBadRequest, "Все поля обязательны", nil)
-		return
-	}
-
-	// Декодируем base64-строку в байты
-	data, err := base64.StdEncoding.DecodeString(req.FileData)
+	// Получаем файл из формы
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		handleError(c, http.StatusBadRequest, "Ошибка декодирования данных файла", err)
+		handleError(c, http.StatusBadRequest, "Ошибка получения файла", err)
+		return
+	}
+	defer file.Close()
+
+	// Читаем содержимое файла
+	data, err := io.ReadAll(file)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось прочитать файл", err)
 		return
 	}
 
-	// Путь для сохранения файла
-	path := filepath.Join("uploads", req.FileName)
+	// Получаем дополнительные параметры
+	userUuid := c.PostForm("userUuid")
+	if userUuid == "" {
+		handleError(c, http.StatusBadRequest, "Отсутствует userUuid", nil)
+		return
+	}
+
+	// Сохраняем файл на диск
+	path := filepath.Join("uploads", header.Filename)
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		handleError(c, http.StatusInternalServerError, "Не удалось записать файл", err)
 		return
 	}
 
-	// Генерация UUID файла
+	// Генерируем уникальный UUID для файла
 	uid, err := s.generateUniqueUUID(func(id uuid.UUID) (bool, error) {
 		return db.CheckUUIDFileInDB(s.db, id)
 	})
@@ -190,19 +188,19 @@ func (s *Server) UploadFile(c *gin.Context) {
 
 	// Сохраняем информацию о файле в БД
 	dbFile := &db.File{
-		UserUUID: req.UserUUID,
-		FilePath: path,
-		FileName: req.FileName,
 		UUID:     uid,
+		UserUUID: uuid.MustParse(userUuid),
+		FilePath: path,
+		FileName: header.Filename,
 	}
 
 	if err := db.CreateFile(s.db, dbFile); err != nil {
-		handleError(c, http.StatusInternalServerError, "Ошибка сохранения файла в БД", err)
+		handleError(c, http.StatusInternalServerError, "Ошибка сохранения в БД", err)
 		return
 	}
 
 	log.Printf("[%s] Файл успешно загружен: %s", op, dbFile.FileName)
-	c.JSON(http.StatusOK, dbFile)
+	c.JSON(http.StatusOK, gin.H{"message": "Файл загружен", "fileUUID": dbFile.UUID})
 }
 
 // DownloadFile Скачивание файла по UUID
