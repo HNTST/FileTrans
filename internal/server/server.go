@@ -3,9 +3,14 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
 )
 
+// Создание нового сервера и настройка маршрутов
+// db - соединение с базой данных через GORM
+// Возвращает указатель на Server
 func NewServer(db *gorm.DB) *Server {
+	log.Println("[NEW_SERVER] Инициализация сервера")
 	server := &Server{
 		db:     db,
 		router: gin.Default(),
@@ -14,21 +19,42 @@ func NewServer(db *gorm.DB) *Server {
 	return server
 }
 
+// Настройка маршрутов сервера
+// Регистрирует все HTTP-эндпоинты и связывает их с обработчиками
 func (s *Server) setupRoutes() {
+	log.Println("[SETUP_ROUTES] Настраиваем маршруты")
 
+	// Статические файлы
 	s.router.Static("/static", "./public")
+
+	// Главная страница
 	s.router.GET("/", func(c *gin.Context) {
 		c.File("./public/index.html")
 	})
 
+	// Загрузка файла
 	s.router.POST("/upload", s.UploadFile)
+
+	// Получение всех файлов
 	s.router.GET("/files", s.GetAllFiles)
+
+	// Скачивание файла по ID
 	s.router.GET("/download/:id", s.DownloadFile)
+
+	// Регистрация пользователя
 	s.router.POST("/register", s.SignUp)
-	s.router.GET("/usersFiles", s.GetFilesByUser)
+
+	// Получение файлов пользователя
+	s.router.GET("/usersFiles", s.GetListFilesByUser)
+
+	// Авторизация пользователя
 	s.router.POST("/signInPage", s.SignIn)
 }
 
+// Запуск HTTP-сервера
+// addr - адрес в формате "host:port" (например, ":8080")
+// Возвращает ошибку при проблемах с запуском сервера
 func (s *Server) Run(addr string) error {
+	log.Printf("[RUN_SERVER] Сервер запущен на %s", addr)
 	return s.router.Run(addr)
 }

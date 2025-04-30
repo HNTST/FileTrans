@@ -2,171 +2,266 @@ package server
 
 import (
 	db "file-transfer/internal/database"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
+// Server Структура сервера, содержащая соединение с БД и роутер Gin
 type Server struct {
-	db     *gorm.DB
-	router *gin.Engine
+	db     *gorm.DB    // Соединение с базой данных через GORM
+	router *gin.Engine // Роутер Gin для обработки HTTP-запросов
 }
 
+// SignUp Регистрация нового пользователя
 func (s *Server) SignUp(c *gin.Context) {
-	const op = "SING_UP"
+	const op = "SIGN_UP"
+
 	var user db.User
-	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+	if err := parseJSONBody(c, &user); err != nil {
+		handleError(c, http.StatusBadRequest, "Невалидный ввод", err)
 		return
 	}
 
 	if user.Login == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверте поля логина и пароля, возможно они пусты"})
+		handleError(c, http.StatusBadRequest, "Логин или пароль не могут быть пустыми", nil)
 		return
 	}
+
 	if db.CheckLoginInDB(s.db, user.Login) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Такой логин занят"})
+		handleError(c, http.StatusBadRequest, "Логин уже занят", nil)
 		return
 	}
 
-	uniqueID, _ := uuid.NewUUID()
-
-	_, unique := db.CheckUUIDUserInDB(s.db, uniqueID)
-	if unique {
-		uniqueID, _ = uuid.NewUUID()
+	uid, err := s.generateUniqueUUID(func(id uuid.UUID) (bool, error) {
+		return db.CheckUUIDUserInDB(s.db, id)
+	})
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось сгенерировать уникальный ID", err)
+		return
 	}
-	user.UUID = uniqueID
+
+	user.UUID = uid
 
 	if err := db.CreateUser(s.db, &user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Произошла ошибка создания нового пользователя, попробуйте снова"})
+		handleError(c, http.StatusInternalServerError, "Ошибка создания пользователя", err)
 		return
 	}
+
+	log.Printf("[%s] Пользователь успешно зарегистрирован: %s", op, user.Login)
+	c.JSON(http.StatusOK, gin.H{"message": "Пользователь создан", "uuid": user.UUID})
 }
 
+// SignIn Авторизация пользователя
 func (s *Server) SignIn(c *gin.Context) {
-	const op = "SING_IN"
-	var user db.User
-	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
-		return
+	const op = "SIGN_IN"
+
+	var credentials struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
 	}
-	if user.Login == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверте поля логина и пароля, возможно они пусты"})
+
+	if err := parseJSONBody(c, &credentials); err != nil {
+		handleError(c, http.StatusBadRequest, "Невалидный ввод", err)
 		return
 	}
 
-	dbUser, err := db.GetUserByLOGIN(s.db, user.Login)
+	dbUser, err := db.GetUserByLogin(s.db, credentials.Login)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Что пошло не так"})
-		log.Printf("Ошибка в получении логина из датабазы: %v", err)
+		handleError(c, http.StatusUnauthorized, "Неверный логин или пароль", err)
 		return
 	}
 
-	if dbUser.Password == user.Password {
-		c.JSON(http.StatusOK, gin.H{"message": "Успешный вход"})
+	if dbUser.Password != credentials.Password {
+		handleError(c, http.StatusUnauthorized, "Неверный логин или пароль", nil)
 		return
 	}
+
+	log.Printf("[%s] Пользователь вошёл: %s", op, dbUser.Login)
+	c.JSON(http.StatusOK, gin.H{"message": "Успешный вход", "uuid": dbUser.UUID})
 }
 
-func (s *Server) GetFilesByUser(c *gin.Context) {
-	const op = "GET_USER'S_ FILES"
-	var user db.User
+// GetListFilesByUser Получение списка файлов конкретного пользователя
+func (s *Server) GetListFilesByUser(c *gin.Context) {
+	const op = "GET_FILES_BY_USER"
 
-	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый ввод"})
+	var user struct {
+		Login string `json:"login"` // JSON использует любые имена — это нормально
+	}
+
+	if err := parseJSONBody(c, &user); err != nil {
+		handleError(c, http.StatusBadRequest, "Невалидный ввод", err)
 		return
 	}
 
 	files, err := db.GetListFilesByUser(s.db, user.Login)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Произошла ошибка получения списка файлов"})
+		handleError(c, http.StatusInternalServerError, "Ошибка получения списка файлов", err)
 		return
 	}
+
 	if len(files) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "У пользователя нет сохранненых файлов"})
+		c.JSON(http.StatusOK, gin.H{"message": "Файлов нет"})
 		return
-	} else {
-		c.IndentedJSON(http.StatusOK, files)
 	}
+
+	log.Printf("[%s] Получено файлов для %s: %d", op, user.Login, len(files))
+	c.IndentedJSON(http.StatusOK, files)
 }
 
+// GetAllFiles Получение всех файлов из БД
 func (s *Server) GetAllFiles(c *gin.Context) {
-	const op = "GET_ALL_FILES_SERVER_FUNC"
-	var files []db.File
+	const op = "GET_ALL_FILES"
+
 	files, err := db.GetAllFiles(s.db)
 	if err != nil {
-		log.Printf("Ошибка получения файлов: %v", err)
-		JSONError(c, http.StatusInternalServerError, "Ошибка сервера при получении файлов")
+		handleError(c, http.StatusInternalServerError, "Ошибка получения всех файлов", err)
 		return
 	}
+
 	if len(files) == 0 {
-		JSONError(c, http.StatusOK, "Файлы не загруженны")
+		c.JSON(http.StatusOK, gin.H{"message": "Файлы не найдены"})
 		return
-	} else {
-		c.IndentedJSON(http.StatusOK, files)
 	}
+
+	log.Printf("[%s] Общее количество файлов: %d", op, len(files))
+	c.IndentedJSON(http.StatusOK, files)
 }
 
+// UploadFile Загрузка файла на сервер
+// UploadFile Загрузка файла через JSON (например, с base64 содержимым)
 func (s *Server) UploadFile(c *gin.Context) {
+	const op = "UPLOAD_FILE"
+
+	// Создание директории uploads
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
-		os.Mkdir("uploads", os.ModePerm)
+		log.Printf("[%s] Создаем папку uploads", op)
+		if err := os.Mkdir("uploads", os.ModePerm); err != nil {
+			handleError(c, http.StatusInternalServerError, "Не удалось создать папку uploads", err)
+			return
+		}
 	}
-	file, err := c.FormFile("file")
+
+	// Получаем файл из формы
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		JSONError(c, http.StatusBadRequest, "Не удалось получить файл")
+		handleError(c, http.StatusBadRequest, "Ошибка получения файла", err)
+		return
+	}
+	defer file.Close()
+
+	// Читаем содержимое файла
+	data, err := io.ReadAll(file)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось прочитать файл", err)
 		return
 	}
 
-	fileName := filepath.Base(file.Filename)
-	path := filepath.Join("uploads", fileName)
-
-	if err := c.SaveUploadedFile(file, path); err != nil {
-		JSONError(c, http.StatusInternalServerError, "Не удалось сохранить файл")
+	// Получаем дополнительные параметры
+	userUuid := c.PostForm("userUuid")
+	if userUuid == "" {
+		handleError(c, http.StatusBadRequest, "Отсутствует userUuid", nil)
 		return
 	}
-	uniqueID, _ := uuid.NewUUID()
 
-	err, unique := db.CheckUUIDFileInDB(s.db, uniqueID)
-	if unique {
-		uniqueID, _ = uuid.NewUUID()
+	// Сохраняем файл на диск
+	path := filepath.Join("uploads", header.Filename)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось записать файл", err)
+		return
 	}
 
+	// Генерируем уникальный UUID для файла
+	uid, err := s.generateUniqueUUID(func(id uuid.UUID) (bool, error) {
+		return db.CheckUUIDFileInDB(s.db, id)
+	})
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось сгенерировать UUID файла", err)
+		return
+	}
+
+	// Сохраняем информацию о файле в БД
 	dbFile := &db.File{
+		UUID:     uid,
+		UserUUID: uuid.MustParse(userUuid),
 		FilePath: path,
-		FileName: fileName,
-		UUID:     uniqueID,
+		FileName: header.Filename,
 	}
 
 	if err := db.CreateFile(s.db, dbFile); err != nil {
-		JSONError(c, http.StatusInternalServerError, "Ошибка сохранения данных файла")
+		handleError(c, http.StatusInternalServerError, "Ошибка сохранения в БД", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dbFile)
+	log.Printf("[%s] Файл успешно загружен: %s", op, dbFile.FileName)
+	c.JSON(http.StatusOK, gin.H{"message": "Файл загружен", "fileUUID": dbFile.UUID})
 }
 
+// DownloadFile Скачивание файла по UUID
 func (s *Server) DownloadFile(c *gin.Context) {
 	id := c.Param("id")
+
 	file, err := db.GetFileByID(s.db, id)
 	if err != nil {
-		JSONError(c, http.StatusNotFound, "Файл не найден")
+		handleError(c, http.StatusNotFound, "Файл не найден", err)
 		return
 	}
 
+	// Защита от отсутствия физического файла
+	if _, err := os.Stat(file.FilePath); os.IsNotExist(err) {
+		handleError(c, http.StatusNotFound, "Физический файл не найден", err)
+		return
+	}
+
+	log.Printf("[DOWNLOAD_FILE] Отправляем файл: %s", file.FileName)
 	c.File(file.FilePath)
 }
 
+// Вспомогательные функции
+
 func JSONMessage(c *gin.Context, text string) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": text,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": text})
 }
+
 func JSONError(c *gin.Context, status int, textErr string) {
-	c.JSON(status, gin.H{
-		"error": textErr,
-	})
+	log.Printf("[ERROR] %s", textErr)
+	c.JSON(status, gin.H{"error": textErr})
+}
+
+func handleError(c *gin.Context, status int, message string, err error) {
+	log.Printf("[%s] Ошибка: %v", message, err)
+	c.JSON(status, gin.H{"error": message})
+}
+
+func parseJSONBody(c *gin.Context, obj interface{}) error {
+	const op = "PARSE_JSON_BODY"
+	if err := c.ShouldBindBodyWithJSON(obj); err != nil {
+		log.Printf("[%s] Ошибка парсинга JSON: %v", op, err)
+		return fmt.Errorf("недопустимый формат ввода")
+	}
+	return nil
+}
+
+func (s *Server) generateUniqueUUID(checkFn func(uuid.UUID) (bool, error)) (uuid.UUID, error) {
+	const op = "GENERATE_UNIQUE_UUID"
+	for i := 0; i < 5; i++ { // max retries
+		uid := uuid.New()
+		exists, err := checkFn(uid)
+		if err != nil {
+			log.Printf("[%s] Ошибка проверки UUID: %v", op, err)
+			continue
+		}
+		if !exists {
+			return uid, nil
+		}
+	}
+	err := fmt.Errorf("не удалось сгенерировать уникальный UUID за 5 попыток")
+	log.Printf("[%s] Ошибка: %v", op, err)
+	return uuid.Nil, err
 }

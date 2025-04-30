@@ -12,18 +12,18 @@
     <!-- Custom Styles -->
     <style>
       /* Градиентный фон страницы */
-      /* Градиентный фон страницы */
       body {
         margin: 0;
         padding: 0;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
         background: linear-gradient(270deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
         background-size: 600% 600%;
         animation: gradientAnimation 15s ease infinite;
-        overflow: hidden;
+        overflow-x: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
 
       @keyframes gradientAnimation {
@@ -41,83 +41,163 @@
       /* Стили для контейнера */
       .container {
         display: flex;
-        gap: 40px; /* Пространство между островками */
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        width: 100%;
         max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
         position: relative;
+        padding: 40px 20px;
+      }
+
+      /* Общие стили для островков */
+      .island {
+        background: rgba(255, 255, 255, 0.92);
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       /* Основной островок */
       .main-island {
-        background: rgba(255, 255, 255, 0.9); /* Более светлый фон */
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        width: 60%; /* Ширина основного островка */
-        transition: transform 0.5s ease; /* Плавное перемещение */
-        position: absolute; /* Для анимации перемещения */
-        left: 50%; /* Центрирование по горизонтали */
-        top: 50%; /* Центрирование по вертикали */
-        transform: translate(-50%, -50%); /* Корректировка центра */
+        width: 60%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+      }
+
+      /* Анимированное состояние основного островка */
+      .main-island.shifted {
+        left: 30%;
+        transform: translate(-50%, -50%);
       }
 
       /* Дополнительный островок */
       .qr-island {
-        background: rgba(255, 255, 255, 0.9); /* Более светлый фон */
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        width: 30%; /* Ширина дополнительного островка */
-        display: none; /* Показывается только после загрузки файла */
-        opacity: 0; /* Начинается с прозрачности 0 */
-        transition: opacity 0.5s ease, transform 0.5s ease; /* Плавное появление */
-        position: absolute; /* Для анимации перемещения */
-        right: -100%; /* Начальное положение за пределами экрана */
-        top: 50%; /* Вертикальное выравнивание */
-        transform: translateY(-50%); /* Корректировка вертикали */
+        width: 30%;
+        position: absolute;
+        right: -50%;
+        top: 50%;
+        transform: translate(0, -50%);
+        opacity: 0;
+        z-index: 1;
       }
 
-      /* Анимация появления */
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      /* Анимированное состояние QR островка */
+      .qr-island.visible {
+        right: 15%;
+        opacity: 1;
+      }
+
+      /* Заголовки */
+      h1 {
+        font-weight: 700;
+        color: #5577cc;
+        margin-bottom: 25px;
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        font-weight: 600;
+        color: #5577cc;
+        margin-bottom: 20px;
+        font-size: 1.7rem;
+      }
+
+      /* Стили для формы */
+      #uploadForm {
+        margin-bottom: 25px;
+      }
+
+      input[type="file"] {
+        margin-bottom: 15px;
+        padding: 12px;
+        border: 2px dashed #a6c1ee;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.7);
       }
 
       /* Прогресс-бар */
       progress {
-        height: 10px;
-        border-radius: 5px;
+        height: 12px;
+        border-radius: 6px;
+        margin: 15px 0;
         appearance: none;
         -webkit-appearance: none;
       }
-
       progress::-webkit-progress-bar {
-        background-color: rgba(
-          255,
-          255,
-          255,
-          0.3
-        ); /* Полупрозрачный фон прогресса */
-        border-radius: 5px;
+        background-color: rgba(230, 230, 230, 0.5);
+        border-radius: 6px;
       }
-
       progress::-webkit-progress-value {
-        background-color: #007bff; /* Цвет заполнения прогресса */
-        border-radius: 5px;
+        background: linear-gradient(to right, #ff9a9e, #ff6b6b);
+        border-radius: 6px;
+      }
+      progress::-moz-progress-bar {
+        background: linear-gradient(to right, #ff9a9e, #ff6b6b);
+        border-radius: 6px;
       }
 
-      progress::-moz-progress-bar {
-        background-color: #007bff; /* Цвет заполнения прогресса */
-        border-radius: 5px;
+      /* Кнопки */
+      .btn {
+        padding: 12px 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, #a6c1ee, #5577cc);
+        border: none;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(to right, #8eafe6, #4466bb);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(to right, #fbc2eb, #a18cd1);
+        border: none;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: linear-gradient(to right, #f9b0e4, #967ac8);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-outline-primary {
+        border: 2px solid #5577cc;
+        color: #5577cc;
+        background: transparent;
+      }
+
+      .btn-outline-primary:hover {
+        background-color: #5577cc;
+        color: white;
+      }
+
+      /* QR код */
+      #qrCodeCanvas {
+        margin: 0 auto 20px;
+        display: block;
+        padding: 15px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
       }
 
       /* Toast Notifications */
@@ -128,22 +208,66 @@
         z-index: 1000;
       }
 
-      /* Кнопки и текст */
-      .btn {
-        background-color: rgba(255, 255, 255, 0.2); /* Полупрозрачные кнопки */
-        border: 1px solid white;
-        color: white;
+      .toast {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
       }
 
-      .btn:hover {
-        background-color: rgba(255, 255, 255, 0.3); /* Эффект при наведении */
+      .toast-header {
+        background-color: rgba(166, 193, 238, 0.3);
+        border-bottom: none;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      /* Сообщения об ошибках */
+      .error-message {
+        color: #ff6b6b;
+        font-weight: 500;
+        margin-top: 5px;
+      }
+
+      /* Адаптивность */
+      @media (max-width: 992px) {
+        .container {
+          flex-direction: column;
+          padding: 20px;
+        }
+
+        .main-island,
+        .qr-island {
+          width: 90%;
+          margin-bottom: 20px;
+          position: relative;
+          left: auto;
+          right: auto;
+          top: auto;
+          transform: none;
+        }
+
+        .main-island.shifted {
+          left: auto;
+          transform: none;
+        }
+
+        .qr-island {
+          display: none;
+        }
+
+        .qr-island.visible {
+          display: block;
+          right: auto;
+          opacity: 1;
+          margin-top: 30px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <!-- Основной островок -->
-      <div class="main-island">
+      <div class="main-island island">
         <h1>ФАЙЛОСОС</h1>
         <form id="uploadForm">
           <input
@@ -157,16 +281,12 @@
             >Supported formats: JPG, PNG, PDF, ZIP, MP4, MP3, DOCX, XLSX. Max
             size: 1GB.</small
           >
-          <p
-            id="fileSizeError"
-            class="error-message"
-            style="display: none; color: red"
-          >
+          <p id="fileSizeError" class="error-message" style="display: none">
             File size exceeds the limit of 1GB.
           </p>
           <progress
             id="progressBar"
-            class="w-100 mb-3"
+            class="w-100"
             style="display: none"
           ></progress>
           <button type="submit" class="btn btn-primary w-100">
@@ -183,14 +303,17 @@
             >Download Link</a
           >
         </div>
+        <!-- Кнопка "Аккаунт" в правом верхнем углу -->
+        <div style="position: absolute; top: 20px; right: 20px; z-index: 1000">
+          <a href="/static/account.html" class="btn btn-outline-primary"
+            >Аккаунт</a
+          >
+        </div>
         <div id="uploadStatus" class="mt-3 text-center"></div>
-        <hr />
-        <h2>Загруженные файлы</h2>
-        <ul id="fileList" class="list-unstyled"></ul>
       </div>
 
       <!-- Дополнительный островок -->
-      <div class="qr-island">
+      <div class="qr-island island">
         <h2>QR Code & Link</h2>
         <canvas
           id="qrCodeCanvas"
@@ -237,7 +360,6 @@
         const qrCodeCanvas = document.getElementById("qrCodeCanvas");
         const copyLinkButton = document.getElementById("copyLinkButton");
         const downloadLink = document.getElementById("downloadLink");
-        const fileList = document.getElementById("fileList");
         const uploadStatus = document.getElementById("uploadStatus");
 
         // Функция для отображения toast-уведомлений
@@ -253,14 +375,11 @@
         // Обработчик отправки формы
         uploadForm.addEventListener("submit", (e) => {
           e.preventDefault();
-
           const file = fileInput.files[0];
-
           if (!file) {
             uploadStatus.textContent = "Please select a file!";
             return;
           }
-
           if (file.size > 1024 * 1024 * 1024) {
             fileSizeError.style.display = "block";
             return;
@@ -288,6 +407,7 @@
 
           // Обработка завершения загрузки
           xhr.addEventListener("load", () => {
+            progressBar.style.display = "none"; // Скрываем прогресс-бар
             if (xhr.status === 200) {
               const data = JSON.parse(xhr.responseText);
               const downloadUrl = data.downloadUrl;
@@ -315,24 +435,14 @@
                 });
               };
 
-              // Анимация перемещения основного островка влево
-              mainIsland.style.position = "absolute";
-              mainIsland.style.left = "10%"; // Перемещаем влево
-              mainIsland.style.transform = "translateX(0)";
-
-              // Показать второй островок (QR-код)
-              qrIsland.style.display = "block";
-              qrIsland.style.opacity = "1"; // Плавное появление
-              qrIsland.style.right = "10%"; // Перемещаем на правую сторону
+              // Анимация перемещения основного островка влево и показ QR-островка
+              mainIsland.classList.add("shifted");
+              qrIsland.classList.add("visible");
 
               // Очистка формы
               fileInput.value = "";
-              progressBar.style.display = "none";
               uploadStatus.textContent = `File "${data.filename}" uploaded successfully!`;
               showToast("File uploaded successfully!");
-
-              // Обновление списка файлов
-              fetchFiles();
             } else {
               uploadStatus.textContent = "Error uploading file.";
               showToast("Error uploading file.");
@@ -341,6 +451,7 @@
 
           // Обработка ошибок
           xhr.addEventListener("error", () => {
+            progressBar.style.display = "none"; // Скрываем прогресс-бар
             uploadStatus.textContent = "Error uploading file.";
             showToast("Error uploading file.");
           });
@@ -349,42 +460,6 @@
           xhr.open("POST", "/upload");
           xhr.send(formData);
         });
-
-        // Функция для получения и отображения списка файлов
-        async function fetchFiles() {
-          try {
-            const response = await fetch("/files");
-            const files = await response.json();
-
-            if (!response.ok) {
-              throw new Error("Failed to fetch files");
-            }
-
-            // Если файлов нет
-            if (files.length === 0) {
-              fileList.innerHTML = "<li>No files available</li>";
-              return;
-            }
-
-            // Отображение списка файлов
-            fileList.innerHTML = "";
-            files.forEach((file) => {
-              const li = document.createElement("li");
-              const a = document.createElement("a");
-              a.href = `/download/${file.ID}`;
-              a.textContent = `${file.file_name} (ID: ${file.uuid})`;
-              a.download = file.file_name; // Указываем имя файла для скачивания
-              li.appendChild(a);
-              fileList.appendChild(li);
-            });
-          } catch (error) {
-            console.error("Error fetching files:", error);
-            fileList.innerHTML = "<li>Error loading files</li>";
-          }
-        }
-
-        // Инициализация при загрузке страницы
-        fetchFiles();
       });
     </script>
   </body>
