@@ -5,17 +5,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// User представляет модель пользователя в системе
+// Содержит учетные данные и связанные с пользователем файлы
 type User struct {
-	gorm.Model
-	UUID     uuid.UUID `json:"uuid" gorm:"uniqueIndex"`
-	Login    string    `json:"login" gorm:"uniqueIndex"`
-	Password string    `json:"password"`
-	Files    []File    `gorm:"foreignKey:UserUUID""`
+	gorm.Model           // Стандартные поля GORM (ID, CreatedAt, UpdatedAt, DeletedAt)
+	UUID       uuid.UUID `json:"uuid" gorm:"uniqueIndex"`  // Уникальный идентификатор пользователя
+	Login      string    `json:"login" gorm:"uniqueIndex"` // Логин пользователя (уникален)
+	Password   string    `json:"password"`                 // Пароль пользователя (хранится в открытом виде*)
+	Files      []File    `gorm:"foreignKey:UserUUID"`      // Связанные с пользователем файлы
 }
+
+// *ВНИМАНИЕ*: В реальном приложении пароли должны храниться в захэшированном виде
+
+// File представляет модель файла в системе
+// Связывается с пользователем через внешний ключ
 type File struct {
-	gorm.Model
-	UserUUID uuid.UUID `json:"user_uuid"`
-	FilePath string    `json:"file_path"`
-	FileName string    `json:"file_name"`
-	UUID     uuid.UUID `json:"uuid" gorm:"uniqueIndex"`
+	gorm.Model           // Стандартные поля GORM (ID, CreatedAt, UpdatedAt, DeletedAt)
+	UserUUID   uuid.UUID `json:"user_uuid"`               // Идентификатор владельца файла
+	FilePath   string    `json:"file_path"`               // Физический путь к файлу на сервере
+	FileName   string    `json:"file_name"`               // Оригинальное имя файла
+	UUID       uuid.UUID `json:"uuid" gorm:"uniqueIndex"` // Уникальный идентификатор файла
 }

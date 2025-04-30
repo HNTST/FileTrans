@@ -7,94 +7,108 @@ import (
 	"log"
 )
 
-func CheckLoginInDB(db *gorm.DB, login string) bool {
-	const op = "CHECK_LOGIN_IN_DATABASE"
-	var user User
+// checkUUIDExistence — общая функция для проверки существования записи по UUID
+func checkUUIDExistence(db *gorm.DB, model interface{}, uuID uuid.UUID) (bool, error) {
+	const op = "CHECK_UUID_EXISTENCE"
+	var count int64
 
-	// Ищем пользователя с указанным логином
-	if err := db.Where("login = ?", login).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Логин не найден в базе данных
-			return false
-		}
-		// Обработка других ошибок (например, проблемы с подключением к БД)
-		log.Printf("[%s] Ошибка проверки логина: %v", op, err)
-		return false
+	if err := db.Model(model).Where("uuid = ?", uuID).Count(&count).Error; err != nil {
+		log.Printf("[%s] Ошибка проверки UUID: %v", op, err)
+		return false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Логин найден в базе данных
-	return true
+	return count > 0, nil
 }
 
-func GetUserByLOGIN(db *gorm.DB, login string) (User, error) {
-	const op = "CHECK_PASSWORD_BY_LOGIN"
-	var user User
+// CheckUUIDFileInDB — проверяет существование файла по UUID
+func CheckUUIDFileInDB(db *gorm.DB, uuID uuid.UUID) (bool, error) {
+	return checkUUIDExistence(db, &File{}, uuID)
+}
 
-	if err := db.Where("Login = ?", login).First(&user).Error; err != nil {
+// CheckUUIDUserInDB — проверяет существование пользователя по UUID
+func CheckUUIDUserInDB(db *gorm.DB, uuID uuid.UUID) (bool, error) {
+	return checkUUIDExistence(db, &User{}, uuID)
+}
+
+// getRecordByField — общая функция для получения записи по полю
+func getRecordByField(db *gorm.DB, out interface{}, field string, value interface{}) error {
+	const op = "GET_RECORD_BY_FIELD"
+
+	if err := db.Where(fmt.Sprintf("%s = ?", field), value).First(out).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Printf("[%s] Запись не найдена: %v", op, err)
+			return gorm.ErrRecordNotFound
+		}
+		log.Printf("[%s] Ошибка запроса: %v", op, err)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+// GetFileByID — получает файл из БД по ID
+func GetFileByID(db *gorm.DB, uuid string) (*File, error) {
+	var file File
+	if err := getRecordByField(db, &file, "uuid", uuid); err != nil {
+		return nil, err // уже возвращается "Файл не найден"
+	}
+	return &file, nil
+}
+
+// GetUserByLogin — получает пользователя из БД по логину
+func GetUserByLogin(db *gorm.DB, login string) (User, error) {
+	var user User
+	if err := getRecordByField(db, &user, "login", login); err != nil {
 		return User{}, err
 	}
 	return user, nil
 }
 
-func CreateUser(db *gorm.DB, user *User) error {
-	return db.Create(user).Error
+// CheckLoginInDB — проверяет существование логина в БД
+func CheckLoginInDB(db *gorm.DB, login string) bool {
+	var user User
+	if err := getRecordByField(db, &user, "login", login); err != nil {
+		return false
+	}
+	return true
 }
 
+// CreateUser — создаёт нового пользователя в БД
+func CreateUser(db *gorm.DB, user *User) error {
+	const op = "CREATE_USER"
+	if err := db.Create(user).Error; err != nil {
+		log.Printf("[%s] Ошибка создания пользователя: %v", op, err)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
+// GetAllFiles — получает все файлы из БД
 func GetAllFiles(db *gorm.DB) ([]File, error) {
-	const op = "GET_ALL_FILES_DATABASE"
+	const op = "GET_ALL_FILES"
 	var files []File
 	if err := db.Find(&files).Error; err != nil {
-		return nil, err
+		log.Printf("[%s] Ошибка получения файлов: %v", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return files, nil
 }
 
+// CreateFile — создаёт новый файл в БД
 func CreateFile(db *gorm.DB, file *File) error {
-	return db.Create(file).Error
+	const op = "CREATE_FILE"
+	if err := db.Create(file).Error; err != nil {
+		log.Printf("[%s] Ошибка создания файла: %v", op, err)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }
 
-func GetFileByID(db *gorm.DB, uuid string) (File, error) {
-	var file File
-	if err := db.Where("uuid = ?", uuid).First(&file).Error; err != nil {
-		return File{}, err
-	}
-	return file, nil
-}
-
-func CheckUUIDFileInDB(db *gorm.DB, uuID uuid.UUID) (error, bool) {
-	var files File
-	var count int64
-	if err := db.Model(&File{}).Where("uuid = ?", uuID).Count(&count).Error; err != nil {
-		return err, false
-	}
-	return nil, count > 0
-
-	if uuID == files.UUID {
-		return nil, true
-	}
-	return nil, false
-}
-
-func CheckUUIDUserInDB(db *gorm.DB, uuID uuid.UUID) (error, bool) {
-	var user User
-	var count int64
-	if err := db.Model(&User{}).Where("uuid = ?", uuID).Count(&count).Error; err != nil {
-		return err, false
-	}
-	return nil, count > 0
-	if uuID == user.UUID {
-		return nil, true
-	}
-	return nil, false
-
-}
-
+// GetListFilesByUser — получает список файлов по логину пользователя
 func GetListFilesByUser(db *gorm.DB, login string) ([]File, error) {
 	var files []File
-
-	if err := db.Where("Login = ?", login).Find(&files).Error; err != nil {
-		log.Printf("не удалось получить файлы пользователя: %v", err)
-		return nil, fmt.Errorf("не удалось получить файлы пользователя")
+	if err := db.Where("user_uuid = (SELECT uuid FROM users WHERE login = ?)", login).Find(&files).Error; err != nil {
+		return nil, fmt.Errorf("GET_LIST_FILES_BY_USER: %w", err)
 	}
 	return files, nil
 }
