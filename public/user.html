@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Личный кабинет</title>
+  </head>
+  <body>
+    <h2 id="welcome">Отсоси хуй, <span id="user-login"></span></h2>
+    <button onclick="logout()" style="margin: -top 10px">Выйти</button>
+
+    <input type="file" id="file-input" />
+    <input type="hidden" id="user-uuid" />
+    <button onclick="uploadFile()">Загрузить файл</button>
+
+    <div id="progress-container" style="margin-top: 10px; display: none">
+      <progress id="progress-bar" value="0" max="100"></progress>
+      <span id="progress-text">0%</span>
+    </div>
+
+    <div id="upload-result" style="margin-top: 10px"></div>
+
+    <hr />
+
+    <h3>Поиск по файлам</h3>
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Введите имя файла..."
+      oninput="filterFiles()"
+    />
+
+    <h3>Ваши файлы:</h3>
+    <ul id="files-list"></ul>
+
+    <script>
+      const userLogin = localStorage.getItem("userLogin");
+      const userUuid = localStorage.getItem("userUuid");
+
+      if (!userLogin || !userUuid) {
+        alert("Вы не авторизованы");
+        window.location.href = "/";
+        throw new Error("Не найдены данные пользователя в localStorage");
+      }
+
+      document.getElementById("user-login").innerText = userLogin;
+      document.getElementById("user-uuid").value = userUuid;
+
+      function uploadFile() {
+        const fileInput = document.getElementById("file-input");
+        const uuid = document.getElementById("user-uuid").value;
+        const resultDiv = document.getElementById("upload-result");
+        const progressBar = document.getElementById("progress-bar");
+        const progressText = document.getElementById("progress-text");
+        const progressContainer = document.getElementById("progress-container");
+
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+
+        if (!fileInput.files.length) {
+          alert("Выберите файл");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        if (file.size > MAX_FILE_SIZE) {
+          resultDiv.innerHTML = `<span style="color: red;">❌ Файл слишком большой. Максимальный размер: 100 МБ</span>`;
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("userUuid", uuid);
+
+        resultDiv.innerHTML = "";
+        progressContainer.style.display = "block";
+        progressBar.value = 0;
+        progressText.textContent = "0%";
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = function (event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round(
+              (event.loaded / event.total) * 100
+            );
+            progressBar.value = percentComplete;
+            progressText.textContent = percentComplete + "%";
+          }
+        };
+
+        xhr.onload = function () {
+          progressContainer.style.display = "none";
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resultDiv.innerHTML = `<span style="color: green;">✅ ${response.message}</span>`;
+              loadUserFiles();
+            } catch (e) {
+              resultDiv.innerHTML = `<span style="color: red;">❌ Ошибка ответа</span>`;
+            }
+          } else {
+            resultDiv.innerHTML = `<span style="color: red;">❌ Ошибка загрузки: ${xhr.statusText}</span>`;
+          }
+        };
+
+        xhr.onerror = function () {
+          progressContainer.style.display = "none";
+          resultDiv.innerHTML = `<span style="color: red;">❌ Сетевая ошибка</span>`;
+        };
+
+        xhr.open("POST", "/upload", true);
+        xhr.send(formData);
+      }
+
+      let allFiles = []; // хрнилище всех файлов
+
+      window.onload = loadUserFiles; // список файлов при загрузке страницы
+
+      async function loadUserFiles() {
+        const resultDiv = document.getElementById("upload-result");
+        resultDiv.innerHTML = "";
+
+        const login = localStorage.getItem("userLogin");
+
+        if (!login) {
+          alert("Вы не авторизованы");
+          window.location.href = "/";
+          return;
+        }
+
+        const response = await fetch("/usersFiles", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ login }),
+        });
+
+        if (!response.ok) {
+          alert("Ошибка загрузки файлов");
+          return;
+        }
+
+        const files = await response.json();
+
+        if (!Array.isArray(files)) {
+          document.getElementById("files-list").innerHTML =
+            "<li>Нет файлов</li>";
+          allFiles = [];
+          return;
+        }
+
+        allFiles = files;
+
+        displayFiles(allFiles);
+      }
+
+      // покажи мне файлы сучка
+      function displayFiles(files) {
+        const list = document.getElementById("files-list");
+        list.innerHTML = "";
+
+        if (files.length === 0) {
+          list.innerHTML = "<li>Файлов не найдено</li>";
+          return;
+        }
+
+        for (const file of files) {
+          const li = createFileListItem(file);
+          list.appendChild(li);
+        }
+      }
+
+      // элемент файла
+      function createFileListItem(file) {
+        const li = document.createElement("li");
+        const downloadLink = `/download/${file.uuid}`;
+
+        li.innerHTML = `
+        ${file.fileName || file.file_name}
+        <br>
+        <a href="${downloadLink}" target="_blank">📁 Скачать</a>
+        &nbsp;|&nbsp;
+        <button onclick="deleteFile('${file.uuid}')">🗑 Удалить</button>
+    `;
+
+        return li;
+      }
+
+      // фильтрация по названию файла
+      function filterFiles() {
+        const searchInput = document.getElementById("search-input");
+        const query = searchInput.value.toLowerCase().trim();
+
+        if (!query) {
+          displayFiles(allFiles); // если пустой поиск
+          return;
+        }
+
+        const filtered = allFiles.filter((file) => {
+          const name = (file.fileName || file.file_name).toLowerCase();
+          return name.includes(query);
+        });
+
+        displayFiles(filtered);
+      }
+
+      async function deleteFile(uuid) {
+        const confirmDelete = confirm("Вы действительно хотите удалить файл?");
+        if (!confirmDelete) return;
+
+        const response = await fetch(`/delete-file/${uuid}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          alert("✅ Файл удален");
+          loadUserFiles(); // обновляем список
+        } else {
+          alert("❌ Ошибка при удалении файла");
+        }
+      }
+
+      function copyLink(link) {
+        navigator.clipboard.writeText(link).then(
+          () => {
+            alert("Ссылка скопирована: " + link);
+          },
+          () => {
+            alert("Не удалось скопировать ссылку");
+          }
+        );
+      }
+
+      window.onload = loadUserFiles;
+      function logout() {
+        localStorage.removeItem("userLogin");
+        localStorage.removeItem("userUuid");
+        window.location.href = "http://localhost:8080/";
+      }
+
+      const REFRESH_INTERVAL = 5000; // 5 секунд
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadUserFiles(); // первый запуск при загрузке страницы
+        setInterval(loadUserFiles, REFRESH_INTERVAL); // далее по таймеру
+      });
+    </script>
+  </body>
+</html>
