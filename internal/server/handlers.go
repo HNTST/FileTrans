@@ -3,14 +3,15 @@ package server
 import (
 	db "file-transfer/internal/database"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // Server Структура сервера, содержащая соединение с БД и роутер Gin
@@ -264,4 +265,30 @@ func (s *Server) generateUniqueUUID(checkFn func(uuid.UUID) (bool, error)) (uuid
 	err := fmt.Errorf("не удалось сгенерировать уникальный UUID за 5 попыток")
 	log.Printf("[%s] Ошибка: %v", op, err)
 	return uuid.Nil, err
+}
+
+func (s *Server) DeleteFileHandler(c *gin.Context) {
+    id := c.Param("uuid")
+
+    file, err := db.GetFileByID(s.db, id)
+    if err != nil {
+        handleError(c, http.StatusNotFound, "Файл не найден", err)
+        return
+    }
+
+    // Удаляем запись из БД
+    if err := s.db.Delete(&db.File{}, "uuid = ?", file.UUID).Error; err != nil {
+        handleError(c, http.StatusInternalServerError, "Ошибка удаления файла из БД", err)
+        return
+    }
+
+    // Удаляем физический файл с диска
+    if err := os.Remove(file.FilePath); err != nil {
+        log.Printf("[DELETE_FILE] Ошибка удаления файла: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить файл с диска"})
+        return
+    }
+
+    log.Printf("[DELETE_FILE] Файл успешно удален: %s", file.FileName)
+    c.JSON(http.StatusOK, gin.H{"message": "Файл удален"})
 }

@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Личный кабинет | Обменник файлов</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome иконки -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Animate.css для анимаций -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #343a40;
+        --secondary-color: #212529;
+        --dark-color: #495057;
+        --light-color: #f8f9fa;
+        --success-color: #5a6268;
+        --danger-color: #6c757d;
+        --warning-color: #5a6268;
+        --info-color: #495057;
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          rgba(52, 58, 64, 0.1) 0%,
+          rgba(33, 37, 41, 0.1) 100%
+        );
+        min-height: 100vh;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--dark-color);
+        padding-bottom: 50px;
+      }
+
+      .sticky-wrapper {
+        position: sticky;
+        top: 20px; /* Расстояние от верха */
+        align-self: flex-start;
+        z-index: 100;
+      }
+
+      .navbar {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        padding: 15px 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+
+      .user-info {
+        color: white;
+        display: flex;
+        align-items: center;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-weight: bold;
+        color: var(--primary-color);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .logout-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+      }
+
+      .main-container {
+        margin-top: 30px;
+      }
+
+      .card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: none;
+        overflow: hidden;
+        margin-bottom: 25px;
+        transition: all 0.3s;
+      }
+
+      .card-header {
+        background: linear-gradient(
+          45deg,
+          rgba(52, 58, 64, 0.8),
+          rgba(33, 37, 41, 0.8)
+        );
+        color: white;
+        font-weight: bold;
+        border: none;
+        padding: 15px 20px;
+      }
+
+      .card-body {
+        padding: 25px;
+      }
+
+      .file-upload-area {
+        border: 2px dashed rgba(52, 58, 64, 0.3);
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .file-upload-area:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(52, 58, 64, 0.05);
+      }
+
+      .file-upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
+
+      .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .upload-btn {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        padding: 12px 25px;
+        border-radius: 50px;
+        color: white !important;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(52, 58, 64, 0.3);
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 10px;
+        margin-top: 15px;
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .progress-bar {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border-radius: 10px;
+      }
+
+      .search-bar {
+        display: flex;
+        margin-bottom: 20px;
+      }
+
+      .search-input {
+        flex-grow: 1;
+        border-radius: 50px 0 0 50px;
+        border: 1px solid #dee2e6;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      }
+
+      .search-input:focus {
+        box-shadow: 0 2px 15px rgba(52, 58, 64, 0.1);
+        border-color: var(--primary-color);
+      }
+
+      .sort-select {
+        border-radius: 0 50px 50px 0;
+        border: 1px solid #dee2e6;
+        border-left: none;
+        padding: 0 20px;
+        font-size: 0.9rem;
+        background-color: white;
+        transition: all 0.3s;
+      }
+
+      .sort-select:focus {
+        box-shadow: 0 2px 15px rgba(52, 58, 64, 0.1);
+      }
+
+      .files-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .file-item {
+        background-color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .file-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: white;
+        font-size: 1.2rem;
+      }
+
+      .file-info {
+        flex-grow: 1;
+      }
+
+      .file-name {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 5px;
+        color: var(--dark-color);
+      }
+
+      .file-date {
+        font-size: 0.8rem;
+        color: #666;
+      }
+
+      .file-actions {
+        display: flex;
+        align-items: center;
+      }
+
+      .action-btn {
+        background-color: transparent;
+        border: none;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s;
+        margin-left: 5px;
+        color: #555;
+      }
+
+      .download-btn {
+        color: var(--info-color);
+      }
+
+      .download-btn:hover {
+        background-color: rgba(73, 80, 87, 0.1);
+      }
+
+      .delete-btn {
+        color: var(--danger-color);
+      }
+
+      .delete-btn:hover {
+        background-color: rgba(108, 117, 125, 0.1);
+      }
+
+      .copy-btn {
+        color: var(--warning-color);
+      }
+
+      .copy-btn:hover {
+        background-color: rgba(90, 98, 104, 0.1);
+      }
+
+      .preview-container {
+        margin-top: 10px;
+        display: none;
+        animation: fadeIn 0.3s;
+      }
+
+      .preview-img {
+        max-height: 150px;
+        border-radius: 5px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .preview-img:hover {
+        transform: scale(1.05);
+      }
+
+      .alert {
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.5s;
+      }
+
+      .alert-success {
+        background-color: rgba(90, 98, 104, 0.1);
+        border-left: 4px solid var(--success-color);
+        color: var(--success-color);
+      }
+
+      .alert-danger {
+        background-color: rgba(108, 117, 125, 0.1);
+        border-left: 4px solid var(--danger-color);
+        color: var(--danger-color);
+      }
+
+      .alert-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .file-name-display {
+        font-size: 0.9rem;
+        margin-top: 10px;
+        font-weight: 500;
+        color: #555;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .no-files-message {
+        text-align: center;
+        padding: 30px;
+        color: #777;
+        font-style: italic;
+        background-color: rgba(0, 0, 0, 0.02);
+        border-radius: 10px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .file-type-image {
+        position: relative;
+      }
+
+      .image-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s;
+      }
+
+      .image-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .overlay-content {
+        max-width: 90%;
+        max-height: 90%;
+        position: relative;
+      }
+
+      .overlay-img {
+        max-width: 100%;
+        max-height: 90vh;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+      }
+
+      .close-overlay {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+      }
+
+      /* Стили для темной темы */
+      .dark-mode {
+        --dark-color: #f8f9fa;
+        --light-color: #121212;
+        background: #121212;
+        color: #f8f9fa;
+      }
+
+      .dark-mode .card {
+        background-color: #1e1e1e;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .dark-mode .file-item {
+        background-color: #1e1e1e;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .dark-mode .search-input,
+      .dark-mode .sort-select {
+        background-color: #1e1e1e;
+        color: #f8f9fa;
+        border-color: #333;
+      }
+
+      .dark-mode .file-name {
+        color: #f8f9fa;
+      }
+
+      .dark-mode .file-date {
+        color: #aaa;
+      }
+
+      .dark-mode .action-btn {
+        color: #ccc;
+      }
+
+      .dark-mode .file-upload-area {
+        border-color: #333;
+      }
+
+      .dark-mode .file-upload-area:hover {
+        background-color: #252525;
+      }
+
+      .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1050;
+      }
+
+      .toast {
+        background: white;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        animation: slideIn 0.3s forwards;
+        max-width: 350px;
+        opacity: 0;
+        transform: translateX(50px);
+      }
+
+      @keyframes slideIn {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .toast-icon {
+        margin-right: 15px;
+        font-size: 1.5rem;
+      }
+
+      .toast-success .toast-icon {
+        color: var(--success-color);
+      }
+
+      .toast-error .toast-icon {
+        color: var(--danger-color);
+      }
+
+      .toast-info .toast-icon {
+        color: var(--info-color);
+      }
+
+      .toast-body {
+        flex-grow: 1;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .toast-message {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .selected-file-info {
+        display: none;
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(52, 58, 64, 0.05);
+        border-radius: 10px;
+        animation: fadeIn 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <i class="fas fa-exchange-alt me-2"></i>Обменник файлов
+        </a>
+        <div class="user-info">
+          <div class="avatar">
+            <span id="user-avatar"></span>
+          </div>
+          <div class="me-3">
+            <div id="user-login" class="fw-bold"></div>
+            <small>Личный кабинет</small>
+          </div>
+          <button onclick="logout()" class="logout-btn">
+            <i class="fas fa-sign-out-alt me-2"></i>Выйти
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="container main-container">
+      <div class="row">
+        <!-- Карточка загрузки файлов -->
+        <div class="col-lg-4 mb-4 sticky-wrapper">
+          <div class="card h-100">
+            <div class="card-header">
+              <i class="fas fa-cloud-upload-alt me-2"></i>Загрузка файлов
+            </div>
+            <div class="card-body">
+              <div class="file-upload-area" id="dropArea">
+                <div class="file-upload-icon">
+                  <i class="fas fa-file-upload"></i>
+                </div>
+                <h5>Перетащите файл сюда или нажмите для выбора</h5>
+                <p class="text-muted">Максимальный размер: 100 МБ</p>
+                <input type="file" id="file-input" class="file-input" />
+                <input type="hidden" id="user-uuid" />
+                <div id="selected-file-info" class="selected-file-info">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-file me-2 text-primary"></i>
+                    <div class="file-name-display" id="selected-file-name">
+                      Файл не выбран
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button onclick="uploadFile()" class="btn upload-btn w-100">
+                <i class="fas fa-upload me-2"></i>Загрузить файл
+              </button>
+
+              <div id="progress-container" class="mt-3" style="display: none">
+                <div class="d-flex justify-content-between mb-1">
+                  <small>Загрузка...</small>
+                  <small id="progress-text">0%</small>
+                </div>
+                <div class="progress">
+                  <div
+                    id="progress-bar"
+                    class="progress-bar"
+                    role="progressbar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+
+              <div id="upload-result" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Карточка со списком файлов -->
+        <div class="col-lg-8">
+          <div class="card">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <div><i class="fas fa-folder-open me-2"></i>Ваши файлы</div>
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="theme-toggle"
+                />
+                <label class="form-check-label text-white" for="theme-toggle"
+                  >Темная тема</label
+                >
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Поиск и сортировка -->
+              <div class="search-bar">
+                <input
+                  type="text"
+                  id="search-input"
+                  class="form-control search-input"
+                  placeholder="Поиск файлов..."
+                  oninput="filterFiles()"
+                />
+                <select
+                  id="sort-select"
+                  class="form-select sort-select"
+                  onchange="applySortAndFilter()"
+                >
+                  <option value="name">По имени</option>
+                  <option value="date">По дате (сначала новые)</option>
+                </select>
+              </div>
+
+              <!-- Список файлов -->
+              <div id="files-container">
+                <ul id="files-list" class="files-list"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay для полноразмерных изображений -->
+    <div class="image-overlay" id="image-overlay">
+      <div class="overlay-content">
+        <button class="close-overlay" onclick="closeImageOverlay()">
+          <i class="fas fa-times"></i>
+        </button>
+        <img
+          class="overlay-img"
+          id="overlay-img"
+          src=""
+          alt="Полноразмерное изображение"
+        />
+      </div>
+    </div>
+
+    <!-- Контейнер для toast-уведомлений -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Bootstrap JS с Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Основной JavaScript -->
+    <script>
+      // Инициализация данных пользователя
+      const userLogin = localStorage.getItem("userLogin");
+      const userUuid = localStorage.getItem("userUuid");
+
+      if (!userLogin || !userUuid) {
+        showToast("Ошибка", "Вы не авторизованы", "error");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+        throw new Error("Не найдены данные пользователя в localStorage");
+      }
+
+      // Установка данных пользователя
+      document.getElementById("user-login").innerText = userLogin;
+      document.getElementById("user-uuid").value = userUuid;
+      document.getElementById("user-avatar").innerText = userLogin
+        .charAt(0)
+        .toUpperCase();
+
+      // Темная тема
+      const themeToggle = document.getElementById("theme-toggle");
+      themeToggle.addEventListener("change", function () {
+        document.body.classList.toggle("dark-mode", this.checked);
+        localStorage.setItem("darkMode", this.checked);
+      });
+
+      // Проверка сохраненной темы
+      if (localStorage.getItem("darkMode") === "true") {
+        themeToggle.checked = true;
+        document.body.classList.add("dark-mode");
+      }
+
+      // Инициализация Drag & Drop
+      const dropArea = document.getElementById("dropArea");
+      const fileInput = document.getElementById("file-input");
+      const selectedFileInfo = document.getElementById("selected-file-info");
+      const selectedFileName = document.getElementById("selected-file-name");
+
+      // События для Drag & Drop
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropArea.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        dropArea.classList.add("bg-light");
+      }
+
+      function unhighlight() {
+        dropArea.classList.remove("bg-light");
+      }
+
+      dropArea.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updateFileInfo();
+      }
+
+      fileInput.addEventListener("change", updateFileInfo);
+
+      function updateFileInfo() {
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          selectedFileName.textContent = file.name;
+          selectedFileInfo.style.display = "block";
+
+          // Определяем иконку по типу файла
+          const fileType = file.type.split("/")[0];
+          let iconClass = "fa-file";
+
+          if (fileType === "image") {
+            iconClass = "fa-file-image";
+          } else if (fileType === "video") {
+            iconClass = "fa-file-video";
+          } else if (fileType === "audio") {
+            iconClass = "fa-file-audio";
+          } else if (file.name.match(/\.(pdf)$/i)) {
+            iconClass = "fa-file-pdf";
+          } else if (file.name.match(/\.(doc|docx)$/i)) {
+            iconClass = "fa-file-word";
+          } else if (file.name.match(/\.(xls|xlsx)$/i)) {
+            iconClass = "fa-file-excel";
+          } else if (file.name.match(/\.(zip|rar|7z|tar|gz)$/i)) {
+            iconClass = "fa-file-archive";
+          }
+
+          document.querySelector(
+            "#selected-file-info i"
+          ).className = `fas ${iconClass} me-2 text-primary`;
+        } else {
+          selectedFileInfo.style.display = "none";
+        }
+      }
+
+      // Функция загрузки файла
+      async function uploadFile() {
+        const fileInput = document.getElementById("file-input");
+        const uuid = document.getElementById("user-uuid").value;
+        const resultDiv = document.getElementById("upload-result");
+        const progressBar = document.getElementById("progress-bar");
+        const progressText = document.getElementById("progress-text");
+        const progressContainer = document.getElementById("progress-container");
+
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+
+        if (!fileInput.files.length) {
+          showToast("Ошибка", "Выберите файл для загрузки", "error");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        if (file.size > MAX_FILE_SIZE) {
+          resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                  <div class="alert-title"><i class="fas fa-exclamation-circle me-2"></i>Ошибка</div>
+                  <div>Файл слишком большой. Максимальный размер: 100 МБ</div>
+                </div>
+              `;
+          showToast("Ошибка", "Файл слишком большой", "error");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("userUuid", uuid);
+
+        resultDiv.innerHTML = "";
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        progressText.textContent = "0%";
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = function (event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round(
+              (event.loaded / event.total) * 100
+            );
+            progressBar.style.width = percentComplete + "%";
+            progressText.textContent = percentComplete + "%";
+          }
+        };
+
+        xhr.onload = function () {
+          progressContainer.style.display = "none";
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                      <div class="alert-title"><i class="fas fa-check-circle me-2"></i>Успешно</div>
+                      <div>${response.message}</div>
+                    </div>
+                  `;
+              showToast("Успешно", "Файл успешно загружен", "success");
+              loadUserFiles();
+              // Сбрасываем форму
+              fileInput.value = "";
+              selectedFileInfo.style.display = "none";
+            } catch (e) {
+              resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                      <div class="alert-title"><i class="fas fa-exclamation-circle me-2"></i>Ошибка</div>
+                      <div>Ошибка обработки ответа сервера</div>
+                    </div>
+                  `;
+              showToast("Ошибка", "Ошибка обработки ответа сервера", "error");
+            }
+          } else {
+            resultDiv.innerHTML = `
+                  <div class="alert alert-danger">
+                    <div class="alert-title"><i class="fas fa-exclamation-circle me-2"></i>Ошибка</div>
+                    <div>Ошибка загрузки: ${xhr.statusText}</div>
+                  </div>
+                `;
+            showToast("Ошибка", `Ошибка загрузки: ${xhr.statusText}`, "error");
+          }
+        };
+
+        xhr.onerror = function () {
+          progressContainer.style.display = "none";
+          resultDiv.innerHTML = `
+    <div class="alert alert-danger">
+      <div class="alert-title"><i class="fas fa-exclamation-circle me-2"></i>Ошибка</div>
+      <div>Не удалось загрузить файл: ${xhr.statusText}</div>
+    </div>
+  `;
+          showToast(
+            "Ошибка",
+            `Не удалось загрузить файл: ${xhr.statusText}`,
+            "error"
+          );
+        };
+
+        xhr.open("POST", "/upload", true);
+        xhr.send(formData);
+      }
+
+      // Функция показывает превью изображения по клику
+      function togglePreview(uuid) {
+        const container = document.getElementById(`preview-${uuid}`);
+        if (container.style.display === "none") {
+          container.style.display = "block";
+        } else {
+          container.style.display = "none";
+        }
+      }
+
+      // Обновление списка файлов
+      let allFiles = [];
+
+      async function loadUserFiles() {
+        const resultDiv = document.getElementById("upload-result");
+        resultDiv.innerHTML = "";
+
+        const response = await fetch("/usersFiles", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ login: userLogin }),
+        });
+
+        if (!response.ok) {
+          showToast("Ошибка", "Не удалось загрузить список файлов", "error");
+          return;
+        }
+
+        const files = await response.json();
+
+        if (!Array.isArray(files)) {
+          document.getElementById("files-list").innerHTML =
+            '<li class="file-item"><div class="no-files-message">Файлов нет</div></li>';
+          return;
+        }
+
+        allFiles = [...files];
+        applySortAndFilter();
+      }
+
+      function applySortAndFilter() {
+        const query = document
+          .getElementById("search-input")
+          .value.toLowerCase()
+          .trim();
+        const sortType = document.getElementById("sort-select").value;
+
+        let filtered = allFiles.filter((file) =>
+          (file.fileName || file.file_name).toLowerCase().includes(query)
+        );
+
+        if (sortType === "name") {
+          filtered.sort((a, b) => {
+            const nameA = (a.fileName || a.file_name).toUpperCase();
+            const nameB = (b.fileName || b.file_name).toUpperCase();
+            return nameA.localeCompare(nameB);
+          });
+        } else if (sortType === "date") {
+          filtered.sort(
+            (a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)
+          );
+        }
+
+        displayFiles(filtered);
+      }
+
+      function displayFiles(files) {
+        const list = document.getElementById("files-list");
+        list.innerHTML = "";
+
+        if (files.length === 0) {
+          list.innerHTML =
+            '<li class="file-item"><div class="no-files-message">Файлов нет</div></li>';
+          return;
+        }
+
+        for (const file of files) {
+          const li = createFileItem(file);
+          list.appendChild(li);
+        }
+      }
+
+      function createFileItem(file) {
+        const li = document.createElement("li");
+        li.className = "file-item";
+
+        const downloadLink = `/download/${file.uuid}`;
+        const originalName = file.fileName || file.file_name || "Без названия";
+
+        // Проверяем тип файла для иконки
+        const ext = originalName.split(".").pop().toLowerCase();
+        let iconClass = "fa-file";
+        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+          iconClass = "fa-file-image";
+        } else if (ext === "pdf") {
+          iconClass = "fa-file-pdf";
+        } else if (["doc", "docx"].includes(ext)) {
+          iconClass = "fa-file-word";
+        } else if (["xls", "xlsx"].includes(ext)) {
+          iconClass = "fa-file-excel";
+        } else if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) {
+          iconClass = "fa-file-archive";
+        } else if (["txt", "log", "csv"].includes(ext)) {
+          iconClass = "fa-file-alt";
+        } else if (["mp4", "avi", "mkv"].includes(ext)) {
+          iconClass = "fa-file-video";
+        } else if (["mp3", "wav", "ogg"].includes(ext)) {
+          iconClass = "fa-file-audio";
+        }
+
+        // HTML элемента файла
+        li.innerHTML = `
+        <div class="d-flex align-items-center">
+          <div class="file-icon">
+            <i class="fas ${iconClass}"></i>
+          </div>
+          <div class="file-info flex-grow-1">
+            <div class="file-name">${originalName}</div>
+            <div class="file-date">
+              Загрузка: ${new Date(
+                file.CreatedAt || file.created_at
+              ).toLocaleDateString()}
+            </div>
+          </div>
+          <div class="file-actions d-flex">
+            <button class="action-btn download-btn" onclick="forceDownload('${
+              file.uuid
+            }', '${originalName}')">
+              <i class="fas fa-download"></i>
+            </button>
+
+            <button class="action-btn delete-btn" onclick="deleteFile('${
+              file.uuid
+            }')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Контейнер для превью -->
+        <div id="preview-${file.uuid}" class="preview-container"></div>
+      `;
+
+        return li;
+      }
+
+      // Принудительное скачивание файла с указанием оригинального имени
+      function forceDownload(uuid, fileName) {
+        const link = document.createElement("a");
+        link.href = `/download/${uuid}`;
+        link.download = fileName; // Здесь мы задаем имя, которое браузер сохранит
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Поиск по файлам
+      function filterFiles() {
+        applySortAndFilter();
+      }
+
+      // Удаление файла
+      async function deleteFile(uuid) {
+        const confirmDelete = confirm(
+          "Вы действительно хотите удалить этот файл?"
+        );
+        if (!confirmDelete) return;
+
+        const response = await fetch(`/delete-file/${uuid}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          showToast("Успех", "Файл удален", "success");
+          loadUserFiles(); // Обновляем список
+        } else {
+          showToast("Ошибка", "Не удалось удалить файл", "error");
+        }
+      }
+
+      // Открытие полноразмерной копии изображения
+      function openImageOverlay(src) {
+        const overlay = document.getElementById("image-overlay");
+        const img = document.getElementById("overlay-img");
+
+        img.src = src;
+        overlay.classList.add("active");
+      }
+
+      function closeImageOverlay() {
+        const overlay = document.getElementById("image-overlay");
+        const img = document.getElementById("overlay-img");
+
+        overlay.classList.remove("active");
+        img.src = "";
+      }
+
+      // Показ Toast-уведомлений
+      function showToast(title, message, type) {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast animate__animated animate__fadeInUp animate__faster ${
+          type === "success"
+            ? "toast-success"
+            : type === "error"
+            ? "toast-error"
+            : "toast-info"
+        } mb-3`;
+
+        toast.innerHTML = `
+        <div class="toast-icon">
+          <i class="fas ${
+            type === "success" ? "fa-check-circle" : "fa-exclamation-circle"
+          }"></i>
+        </div>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+      `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add("animate__fadeOutDown");
+        }, 2500);
+
+        setTimeout(() => {
+          container.removeChild(toast);
+        }, 3000);
+      }
+
+      // Автообновление списка файлов
+      const REFRESH_INTERVAL = 5000; // 5 секунд
+      document.addEventListener("DOMContentLoaded", () => {
+        loadUserFiles(); // первый запуск
+        setInterval(loadUserFiles, REFRESH_INTERVAL); // далее по таймеру
+      });
+
+      // Выход из аккаунта
+      function logout() {
+        localStorage.removeItem("userLogin");
+        localStorage.removeItem("userUuid");
+        window.location.href = "/";
+      }
+    </script>
+  </body>
+</html>
