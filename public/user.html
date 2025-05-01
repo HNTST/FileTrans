@@ -311,6 +311,14 @@
         background-color: rgba(108, 117, 125, 0.1);
       }
 
+      .share-btn {
+        color: var(--danger-color);
+      }
+
+      .share-btn:hover {
+        background-color: rgba(108, 117, 125, 0.1);
+      }
+
       .copy-btn {
         color: var(--warning-color);
       }
@@ -327,10 +335,12 @@
 
       .preview-img {
         max-height: 150px;
+        width: auto;
         border-radius: 5px;
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         transition: all 0.3s;
+        border: 1px solid rgba(0, 0, 0, 0.05);
       }
 
       .preview-img:hover {
@@ -668,6 +678,8 @@
                 >
                   <option value="name">По имени</option>
                   <option value="date">По дате (сначала новые)</option>
+                  <option value="size_asc">По размеру (Ворзастание)</option>
+                  <option value="size_desc">По размеру (Убывание)</option>
                 </select>
               </div>
 
@@ -919,11 +931,26 @@
 
       // Функция показывает превью изображения по клику
       function togglePreview(uuid) {
+        const file = allFiles.find((f) => f.uuid === uuid);
+        if (!file) return;
+
+        const originalName = file.fileName || file.file_name;
+        const ext = originalName.split(".").pop().toLowerCase();
+
+        const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+        if (!imageExtensions.includes(ext)) {
+          showToast("Инфо", "Превью доступно только для изображений", "info");
+          return;
+        }
+
         const container = document.getElementById(`preview-${uuid}`);
+        if (!container) return;
+
+        // Просто переключаем видимость без анимации
         if (container.style.display === "none") {
-          container.style.display = "block";
+          container.style.display = "block"; // Моментальное появление
         } else {
-          container.style.display = "none";
+          container.style.display = "none"; // Моментальное исчезновение
         }
       }
 
@@ -966,20 +993,31 @@
           .trim();
         const sortType = document.getElementById("sort-select").value;
 
+        // Фильтрация
         let filtered = allFiles.filter((file) =>
           (file.fileName || file.file_name).toLowerCase().includes(query)
         );
 
-        if (sortType === "name") {
-          filtered.sort((a, b) => {
-            const nameA = (a.fileName || a.file_name).toUpperCase();
-            const nameB = (b.fileName || b.file_name).toUpperCase();
-            return nameA.localeCompare(nameB);
-          });
-        } else if (sortType === "date") {
-          filtered.sort(
-            (a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)
-          );
+        // Сортировка
+        switch (sortType) {
+          case "name":
+            filtered.sort((a, b) => {
+              const nameA = (a.fileName || a.file_name).toUpperCase();
+              const nameB = (b.fileName || b.file_name).toUpperCase();
+              return nameA.localeCompare(nameB);
+            });
+            break;
+          case "date":
+            filtered.sort(
+              (a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt)
+            );
+            break;
+          case "size_asc":
+            filtered.sort((a, b) => (a.size || 0) - (b.size || 0));
+            break;
+          case "size_desc":
+            filtered.sort((a, b) => (b.size || 0) - (a.size || 0));
+            break;
         }
 
         displayFiles(filtered);
@@ -1004,7 +1042,6 @@
       function createFileItem(file) {
         const li = document.createElement("li");
         li.className = "file-item";
-
         const downloadLink = `/download/${file.uuid}`;
         const originalName = file.fileName || file.file_name || "Без названия";
 
@@ -1029,89 +1066,73 @@
           iconClass = "fa-file-audio";
         }
 
+        // Форматируем размер файла
+        const fileSize = file.size ? formatSize(file.size) : "—";
+
         // HTML элемента файла
         li.innerHTML = `
-        <div class="d-flex align-items-center">
-          <div class="file-icon">
-            <i class="fas ${iconClass}"></i>
-          </div>
-          <div class="file-info flex-grow-1">
-            <div class="file-name">${originalName}</div>
-            <div class="file-date">
-              Загрузка: ${new Date(
-            file.CreatedAt || file.created_at
+  <div class="d-flex align-items-center" onclick="togglePreview('${
+    file.uuid
+  }')">
+    <div class="file-icon">
+      <i class="fas ${iconClass}"></i>
+    </div>
+    <div class="file-info flex-grow-1">
+      <div class="file-name">${originalName}</div>
+      <div class="file-date">
+        Загрузка: ${new Date(
+          file.CreatedAt || file.created_at
         ).toLocaleDateString()}
-            </div>
-          </div>
-          <div class="file-actions d-flex">
-            <button class="action-btn download-btn" onclick="forceDownload('${
-            file.uuid
-        }', '${originalName}')">
-              <i class="fas fa-download"></i>
-            </button>
-
-            <button class="action-btn delete-btn" onclick="deleteFile('${
-            file.uuid
+      </div>
+      <div class="file-size text-muted">
+        Размер: ${fileSize}
+      </div>
+    </div>
+    <div class="file-actions d-flex">
+      <button class="action-btn download-btn" onclick="event.stopPropagation(); forceDownload('${
+        file.uuid
+      }', '${originalName}')">
+        <i class="fas fa-download"></i>
+      </button>
+      <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteFile('${
+        file.uuid
+      }')">
+        <i class="fas fa-trash"></i>
+      </button>
+      <button class="action-btn rename-btn" onclick="event.stopPropagation(); updateFileName('${
+        file.uuid
+      }')">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="action-btn share-btn" onclick="event.stopPropagation(); shareFile('${
+        file.uuid
+      }', '${originalName}')">
+        <i class="fas fa-share-alt"></i>
+      </button>
+    </div>
+  </div>
+  <!-- Контейнер для превью -->
+  <div id="preview-${file.uuid}" class="preview-container">
+    <img src="/download/${
+      file.uuid
+    }" alt="Превью" class="preview-img img-fluid" onclick="openImageOverlay('/download/${
+          file.uuid
         }')">
-              <i class="fas fa-trash"></i>
-            </button>
-            <button class="action-btn rename-btn" onclick="updateFileName('${file.uuid}')">
-  <i class="fas fa-edit"></i>
-</button>
-          </div>
-        </div>
-
-        <!-- Контейнер для превью -->
-        <div id="preview-${file.uuid}" class="preview-container"></div>
-      `;
+  </div>
+`;
 
         return li;
       }
       // Форматируем размер файла (например, 1024 → "1.00 КБ")
       function formatSize(bytes) {
-        const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
-        if (bytes === 0) return '0 Б';
+        const sizes = ["Б", "КБ", "МБ", "ГБ"];
+        if (bytes === 0) return "0 Б";
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+        return (
+          parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i]
+        );
       }
-      function createFileItem(file) {
-        const li = document.createElement("li");
-        li.className = "file-item";
-        const downloadLink = `/download/${file.uuid}`;
-        const originalName = file.fileName || file.file_name || "Без названия";
 
-        // Проверяем тип файла для иконки (оставляем как есть)
-        const ext = originalName.split(".").pop().toLowerCase();
-        let iconClass = "fa-file";
-        // ... (остальной код для иконки)
-
-        // Добавляем размер файла
-        const fileSize = file.size ? formatSize(file.size) : "—";
-
-        // HTML элемента файла
-        li.innerHTML = `
-        <div class="d-flex align-items-center">
-            <div class="file-icon">
-                <i class="fas ${iconClass}"></i>
-            </div>
-            <div class="file-info flex-grow-1">
-                <div class="file-name">${originalName}</div>
-                <div class="file-date">
-                    Загрузка: ${new Date(file.CreatedAt || file.created_at).toLocaleDateString()}
-                </div>
-                <div class="file-size text-muted">
-                    Размер: ${fileSize}
-                </div>
-            </div>
-            <div class="file-actions d-flex">
-                <!-- Кнопки скачивания, удаления и переименования -->
-            </div>
-        </div>
-        <!-- Контейнер для превью -->
-        <div id="preview-${file.uuid}" class="preview-container"></div>
-    `;
-        return li;
-      }
       // Принудительное скачивание файла с указанием оригинального имени
       function forceDownload(uuid, fileName) {
         const link = document.createElement("a");
@@ -1156,9 +1177,9 @@
         const response = await fetch(`/updateFileName/${uuid}`, {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ file_name: newName })
+          body: JSON.stringify({ file_name: newName }),
         });
 
         if (response.ok) {
@@ -1166,10 +1187,46 @@
           loadUserFiles(); // Обновляем список файлов
         } else {
           const error = await response.text();
-          showToast("Ошибка", `Не удалось изменить имя файла: ${error}`, "error");
+          showToast(
+            "Ошибка",
+            `Не удалось изменить имя файла: ${error}`,
+            "error"
+          );
         }
       }
 
+      async function shareFile(uuid, fileName) {
+        const downloadLink = `${window.location.origin}/download/${uuid}`;
+        const title = `Файл: ${fileName}`;
+
+        // Пытаемся использовать Web Share API
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: title,
+              text: `Скачать файл "${fileName}"`,
+              url: downloadLink,
+            });
+            showToast("Успех", "Файл успешно поделён", "success");
+          } catch (error) {
+            console.warn("Ошибка при вызове Web Share API:", error);
+            // Если пользователь отменил деление
+            copyToClipboard(downloadLink, fileName);
+          }
+        } else {
+          // Если Web Share не поддерживается — копируем в буфер
+          copyToClipboard(downloadLink, fileName);
+        }
+      }
+      async function copyToClipboard(text, fileName) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("Ссылка скопирована", `"${fileName}"`, "info");
+        } catch (err) {
+          console.error("Не удалось скопировать текст: ", err);
+          alert("Не удалось скопировать ссылку. Попробуйте вручную.");
+        }
+      }
 
       // Открытие полноразмерной копии изображения
       function openImageOverlay(src) {
@@ -1224,7 +1281,7 @@
       }
 
       // Автообновление списка файлов
-      const REFRESH_INTERVAL = 5000; // 5 секунд
+      //const REFRESH_INTERVAL = 5000; // 5 секунд
       document.addEventListener("DOMContentLoaded", () => {
         loadUserFiles(); // первый запуск
         setInterval(loadUserFiles, REFRESH_INTERVAL); // далее по таймеру
@@ -1236,8 +1293,6 @@
         localStorage.removeItem("userUuid");
         window.location.href = "/";
       }
-
-
     </script>
   </body>
 </html>
