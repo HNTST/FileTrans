@@ -25,4 +25,5 @@ type File struct {
 	FilePath   string    `json:"file_path"`               // Физический путь к файлу на сервере
 	FileName   string    `json:"file_name"`               // Оригинальное имя файла
 	UUID       uuid.UUID `json:"uuid" gorm:"uniqueIndex"` // Уникальный идентификатор файла
+	Size       uint64    `json:"size"`                    // Размер файла в байтах
 }

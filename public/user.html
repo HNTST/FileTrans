@@ -21,10 +21,9 @@
     />
     <style>
       :root {
+        /* Основные цвета */
         --primary-color: #343a40;
         --secondary-color: #212529;
-        --dark-color: #495057;
-        --light-color: #f8f9fa;
         --success-color: #5a6268;
         --danger-color: #6c757d;
         --warning-color: #5a6268;
@@ -442,49 +441,54 @@
         border: none;
       }
 
+      .file-size {
+        font-size: 0.8rem;
+        color: #666;
+      }
       /* Стили для темной темы */
       .dark-mode {
-        --dark-color: #f8f9fa;
-        --light-color: #121212;
-        background: #121212;
-        color: #f8f9fa;
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #f8f9fa;
+        --muted-text: #aaa;
+        --border-color: #333;
+        --input-bg: #1e1e1e;
+        --input-text: #f8f9fa;
+        --icon-color: #ccc;
+      }
+
+      .dark-mode {
+        background-color: var(--bg-color);
+        color: var(--text-color);
       }
 
       .dark-mode .card {
-        background-color: #1e1e1e;
+        background-color: var(--card-bg);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
       }
 
       .dark-mode .file-item {
-        background-color: #1e1e1e;
+        background-color: var(--card-bg);
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
       }
 
       .dark-mode .search-input,
       .dark-mode .sort-select {
-        background-color: #1e1e1e;
-        color: #f8f9fa;
-        border-color: #333;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        border-color: var(--border-color);
       }
 
       .dark-mode .file-name {
-        color: #f8f9fa;
+        color: var(--text-color);
       }
 
       .dark-mode .file-date {
-        color: #aaa;
+        color: var(--muted-text);
       }
 
       .dark-mode .action-btn {
-        color: #ccc;
-      }
-
-      .dark-mode .file-upload-area {
-        border-color: #333;
-      }
-
-      .dark-mode .file-upload-area:hover {
-        background-color: #252525;
+        color: var(--icon-color);
       }
 
       .toast-container {
@@ -1063,7 +1067,51 @@
 
         return li;
       }
+      // Форматируем размер файла (например, 1024 → "1.00 КБ")
+      function formatSize(bytes) {
+        const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+        if (bytes === 0) return '0 Б';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+      function createFileItem(file) {
+        const li = document.createElement("li");
+        li.className = "file-item";
+        const downloadLink = `/download/${file.uuid}`;
+        const originalName = file.fileName || file.file_name || "Без названия";
 
+        // Проверяем тип файла для иконки (оставляем как есть)
+        const ext = originalName.split(".").pop().toLowerCase();
+        let iconClass = "fa-file";
+        // ... (остальной код для иконки)
+
+        // Добавляем размер файла
+        const fileSize = file.size ? formatSize(file.size) : "—";
+
+        // HTML элемента файла
+        li.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="file-icon">
+                <i class="fas ${iconClass}"></i>
+            </div>
+            <div class="file-info flex-grow-1">
+                <div class="file-name">${originalName}</div>
+                <div class="file-date">
+                    Загрузка: ${new Date(file.CreatedAt || file.created_at).toLocaleDateString()}
+                </div>
+                <div class="file-size text-muted">
+                    Размер: ${fileSize}
+                </div>
+            </div>
+            <div class="file-actions d-flex">
+                <!-- Кнопки скачивания, удаления и переименования -->
+            </div>
+        </div>
+        <!-- Контейнер для превью -->
+        <div id="preview-${file.uuid}" class="preview-container"></div>
+    `;
+        return li;
+      }
       // Принудительное скачивание файла с указанием оригинального имени
       function forceDownload(uuid, fileName) {
         const link = document.createElement("a");
@@ -1188,6 +1236,8 @@
         localStorage.removeItem("userUuid");
         window.location.href = "/";
       }
+
+
     </script>
   </body>
 </html>

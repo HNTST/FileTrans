@@ -165,6 +165,8 @@ func (s *Server) UploadFile(c *gin.Context) {
 		return
 	}
 
+	size := uint64(len(data))
+
 	// Получаем дополнительные параметры
 	userUuid := c.PostForm("userUuid")
 	if userUuid == "" {
@@ -194,6 +196,7 @@ func (s *Server) UploadFile(c *gin.Context) {
 		UserUUID: uuid.MustParse(userUuid),
 		FilePath: path,
 		FileName: header.Filename,
+		Size:     size,
 	}
 
 	if err := db.CreateFile(s.db, dbFile); err != nil {
