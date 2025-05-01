@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"log"
+	"os"
 )
 
 // checkUUIDExistence — общая функция для проверки существования записи по UUID
@@ -111,4 +112,40 @@ func GetListFilesByUser(db *gorm.DB, login string) ([]File, error) {
 		return nil, fmt.Errorf("GET_LIST_FILES_BY_USER: %w", err)
 	}
 	return files, nil
+}
+
+// db/file.go
+
+// DeleteFile удаляет файл из БД и физически с диска
+func DeleteFile(db *gorm.DB, uuid string) (error, File) {
+	file, err := GetFileByID(db, uuid)
+	if err != nil {
+		return fmt.Errorf("файл не найден: %w", err), File{}
+	}
+
+	// Удаляем запись из БД
+	if err := db.Delete(&File{}, "uuid = ?", file.UUID).Error; err != nil {
+		return fmt.Errorf("ошибка удаления файла из БД: %w", err), File{}
+	}
+
+	// Удаляем физический файл с диска
+	if err := os.Remove(file.FilePath); err != nil {
+		return fmt.Errorf("ошибка удаления физического файла: %w", err), File{}
+	}
+
+	return nil, *file
+}
+
+// UpdateFileName обновляет имя файла в БД
+func UpdateFileName(db *gorm.DB, uuid string, newFileName string) error {
+	file, err := GetFileByID(db, uuid)
+	if err != nil {
+		return fmt.Errorf("файл не найден: %w", err)
+	}
+
+	if err := db.Model(&file).UpdateColumn("file_name", newFileName).Error; err != nil {
+		return fmt.Errorf("ошибка обновления имени файла: %w", err)
+	}
+
+	return nil
 }

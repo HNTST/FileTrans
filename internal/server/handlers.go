@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -226,15 +227,6 @@ func (s *Server) DownloadFile(c *gin.Context) {
 
 // Вспомогательные функции
 
-func JSONMessage(c *gin.Context, text string) {
-	c.JSON(http.StatusOK, gin.H{"message": text})
-}
-
-func JSONError(c *gin.Context, status int, textErr string) {
-	log.Printf("[ERROR] %s", textErr)
-	c.JSON(status, gin.H{"error": textErr})
-}
-
 func handleError(c *gin.Context, status int, message string, err error) {
 	log.Printf("[%s] Ошибка: %v", message, err)
 	c.JSON(status, gin.H{"error": message})
@@ -268,27 +260,40 @@ func (s *Server) generateUniqueUUID(checkFn func(uuid.UUID) (bool, error)) (uuid
 }
 
 func (s *Server) DeleteFileHandler(c *gin.Context) {
-    id := c.Param("uuid")
+	id := c.Param("uuid")
+	err, file := db.DeleteFile(s.db, id)
+	if err != nil {
+		if strings.Contains(err.Error(), "файл не найден") {
+			handleError(c, http.StatusNotFound, "Файл не найден", err)
+		} else {
+			handleError(c, http.StatusInternalServerError, "Ошибка удаления файла", err)
+		}
+		return
+	}
 
-    file, err := db.GetFileByID(s.db, id)
-    if err != nil {
-        handleError(c, http.StatusNotFound, "Файл не найден", err)
-        return
-    }
+	log.Printf("[DELETE_FILE] Файл c UUID успешно удален: %s", file.UUID)
+	c.JSON(http.StatusOK, gin.H{"message": "Файл удален"})
+}
 
-    // Удаляем запись из БД
-    if err := s.db.Delete(&db.File{}, "uuid = ?", file.UUID).Error; err != nil {
-        handleError(c, http.StatusInternalServerError, "Ошибка удаления файла из БД", err)
-        return
-    }
+func (s *Server) UpdateFileName(c *gin.Context) {
+	uuIdParam := c.Param("uuid")
 
-    // Удаляем физический файл с диска
-    if err := os.Remove(file.FilePath); err != nil {
-        log.Printf("[DELETE_FILE] Ошибка удаления файла: %v", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить файл с диска"})
-        return
-    }
+	var newFile db.File
+	if err := parseJSONBody(c, &newFile); err != nil {
+		handleError(c, http.StatusBadRequest, "Невалидный ввод", err)
+		return
+	}
 
-    log.Printf("[DELETE_FILE] Файл успешно удален: %s", file.FileName)
-    c.JSON(http.StatusOK, gin.H{"message": "Файл удален"})
+	if newFile.FileName == "" {
+		handleError(c, http.StatusBadRequest, "Имя файла не может быть пустым", nil)
+		return
+	}
+
+	if err := db.UpdateFileName(s.db, uuIdParam, newFile.FileName); err != nil {
+		handleError(c, http.StatusInternalServerError, "Ошибка изменения имени файла", err)
+		return
+	}
+
+	log.Printf("[UPDATE_NAME_FILE] Имя файла обновлено на %s", newFile.FileName)
+	c.JSON(http.StatusOK, gin.H{"message": "Имя файла обновлено"})
 }

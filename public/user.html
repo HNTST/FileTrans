@@ -49,7 +49,12 @@
         align-self: flex-start;
         z-index: 100;
       }
-
+      .rename-btn {
+        color: var(--warning-color);
+      }
+      .rename-btn:hover {
+        background-color: rgba(90, 98, 104, 0.1);
+      }
       .navbar {
         background: linear-gradient(
           90deg,
@@ -1030,22 +1035,25 @@
             <div class="file-name">${originalName}</div>
             <div class="file-date">
               Загрузка: ${new Date(
-                file.CreatedAt || file.created_at
-              ).toLocaleDateString()}
+            file.CreatedAt || file.created_at
+        ).toLocaleDateString()}
             </div>
           </div>
           <div class="file-actions d-flex">
             <button class="action-btn download-btn" onclick="forceDownload('${
-              file.uuid
-            }', '${originalName}')">
+            file.uuid
+        }', '${originalName}')">
               <i class="fas fa-download"></i>
             </button>
 
             <button class="action-btn delete-btn" onclick="deleteFile('${
-              file.uuid
-            }')">
+            file.uuid
+        }')">
               <i class="fas fa-trash"></i>
             </button>
+            <button class="action-btn rename-btn" onclick="updateFileName('${file.uuid}')">
+  <i class="fas fa-edit"></i>
+</button>
           </div>
         </div>
 
@@ -1089,6 +1097,31 @@
           showToast("Ошибка", "Не удалось удалить файл", "error");
         }
       }
+
+      async function updateFileName(uuid) {
+        const newName = prompt("Введите новое имя файла (без расширения):");
+        if (!newName || newName.trim() === "") {
+          showToast("Ошибка", "Имя файла не может быть пустым", "error");
+          return;
+        }
+
+        const response = await fetch(`/updateFileName/${uuid}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ file_name: newName })
+        });
+
+        if (response.ok) {
+          showToast("Успех", "Имя файла изменено", "success");
+          loadUserFiles(); // Обновляем список файлов
+        } else {
+          const error = await response.text();
+          showToast("Ошибка", `Не удалось изменить имя файла: ${error}`, "error");
+        }
+      }
+
 
       // Открытие полноразмерной копии изображения
       function openImageOverlay(src) {
