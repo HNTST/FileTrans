@@ -34,7 +34,7 @@ func (s *Server) setupRoutes() {
 	})
 
 	s.router.DELETE("/delete-file/:uuid", s.DeleteFileHandler)
-	
+
 	// Загрузка файла
 	s.router.POST("/upload", s.UploadFile)
 
@@ -52,6 +52,9 @@ func (s *Server) setupRoutes() {
 
 	// Авторизация пользователя
 	s.router.POST("/signInPage", s.SignIn)
+
+	s.router.PATCH("/updateFileName/:uuid", s.UpdateFileName)
+
 }
 
 // Запуск HTTP-сервера
