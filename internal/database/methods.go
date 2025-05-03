@@ -114,8 +114,6 @@ func GetListFilesByUser(db *gorm.DB, login string) ([]File, error) {
 	return files, nil
 }
 
-// db/file.go
-
 // DeleteFile удаляет файл из БД и физически с диска
 func DeleteFile(db *gorm.DB, uuid string) (error, File) {
 	file, err := GetFileByID(db, uuid)

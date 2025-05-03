@@ -55,6 +55,8 @@ func (s *Server) setupRoutes() {
 
 	s.router.PATCH("/updateFileName/:uuid", s.UpdateFileName)
 
+	s.router.GET("/api/pdf/:uuid/page/:page", s.GetPDFPage)
+
 }
 
 // Запуск HTTP-сервера

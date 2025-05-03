@@ -1,18 +1,24 @@
 package server
 
 import (
+	"bytes"
+	"encoding/base64"
 	db "file-transfer/internal/database"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/unidoc/unipdf/v3/model"
+	"github.com/unidoc/unipdf/v3/render"
+	"gorm.io/gorm"
+	"image/png"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 // Server Структура сервера, содержащая соединение с БД и роутер Gin
@@ -137,7 +143,6 @@ func (s *Server) GetAllFiles(c *gin.Context) {
 }
 
 // UploadFile Загрузка файла на сервер
-// UploadFile Загрузка файла через JSON (например, с base64 содержимым)
 func (s *Server) UploadFile(c *gin.Context) {
 	const op = "UPLOAD_FILE"
 
@@ -156,7 +161,12 @@ func (s *Server) UploadFile(c *gin.Context) {
 		handleError(c, http.StatusBadRequest, "Ошибка получения файла", err)
 		return
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
 
 	// Читаем содержимое файла
 	data, err := io.ReadAll(file)
@@ -228,40 +238,6 @@ func (s *Server) DownloadFile(c *gin.Context) {
 	c.File(file.FilePath)
 }
 
-// Вспомогательные функции
-
-func handleError(c *gin.Context, status int, message string, err error) {
-	log.Printf("[%s] Ошибка: %v", message, err)
-	c.JSON(status, gin.H{"error": message})
-}
-
-func parseJSONBody(c *gin.Context, obj interface{}) error {
-	const op = "PARSE_JSON_BODY"
-	if err := c.ShouldBindBodyWithJSON(obj); err != nil {
-		log.Printf("[%s] Ошибка парсинга JSON: %v", op, err)
-		return fmt.Errorf("недопустимый формат ввода")
-	}
-	return nil
-}
-
-func (s *Server) generateUniqueUUID(checkFn func(uuid.UUID) (bool, error)) (uuid.UUID, error) {
-	const op = "GENERATE_UNIQUE_UUID"
-	for i := 0; i < 5; i++ { // max retries
-		uid := uuid.New()
-		exists, err := checkFn(uid)
-		if err != nil {
-			log.Printf("[%s] Ошибка проверки UUID: %v", op, err)
-			continue
-		}
-		if !exists {
-			return uid, nil
-		}
-	}
-	err := fmt.Errorf("не удалось сгенерировать уникальный UUID за 5 попыток")
-	log.Printf("[%s] Ошибка: %v", op, err)
-	return uuid.Nil, err
-}
-
 func (s *Server) DeleteFileHandler(c *gin.Context) {
 	id := c.Param("uuid")
 	err, file := db.DeleteFile(s.db, id)
@@ -299,4 +275,113 @@ func (s *Server) UpdateFileName(c *gin.Context) {
 
 	log.Printf("[UPDATE_NAME_FILE] Имя файла обновлено на %s", newFile.FileName)
 	c.JSON(http.StatusOK, gin.H{"message": "Имя файла обновлено"})
+}
+
+func (s *Server) GetPDFPage(c *gin.Context) {
+	const op = "GET_PDF_PAGE"
+
+	uuid := c.Param("uuid")
+	pageNum, err := strconv.Atoi(c.Param("page"))
+	if err != nil {
+		handleError(c, http.StatusBadRequest, "Неверный номер страницы", err)
+		return
+	}
+
+	// 1. Получаем файл из БД
+	file, err := db.GetFileByID(s.db, uuid)
+	if err != nil {
+		handleError(c, http.StatusNotFound, "Файл не найден", err)
+		return
+	}
+
+	// 2. Проверяем, что это PDF
+	if !strings.HasSuffix(file.FileName, ".pdf") {
+		handleError(c, http.StatusBadRequest, "Файл не является PDF", nil)
+		return
+	}
+
+	// 3. Открываем файл
+	f, err := os.Open(file.FilePath)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Не удалось открыть файл", err)
+		return
+	}
+	defer f.Close()
+
+	// 4. Загружаем PDF
+	pdfReader, err := model.NewPdfReader(f)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Ошибка чтения PDF", err)
+		return
+	}
+
+	// 5. Проверяем номер страницы
+	numPages, err := pdfReader.GetNumPages()
+	if err != nil || pageNum < 1 || pageNum > numPages {
+		handleError(c, http.StatusBadRequest, "Неверный номер страницы", nil)
+		return
+	}
+
+	// 6. Получаем страницу
+	page, err := pdfReader.GetPage(pageNum)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Ошибка получения страницы", err)
+		return
+	}
+
+	// 7. Рендерим страницу в base64
+	device := render.NewImageDevice()
+	img, err := device.Render(page)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "Ошибка рендера страницы", err)
+		return
+	}
+
+	// 8. Кодируем изображение в base64
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		handleError(c, http.StatusInternalServerError, "Ошибка кодирования PNG", err)
+		return
+	}
+
+	// 9. Отправляем ответ
+	c.JSON(http.StatusOK, gin.H{
+		"image":      "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes()),
+		"page":       pageNum,
+		"totalPages": numPages,
+	})
+}
+
+// Вспомогательные функции
+
+func handleError(c *gin.Context, status int, message string, err error) {
+	log.Printf("[%s] Ошибка: %v", message, err)
+	c.JSON(status, gin.H{"error": message})
+}
+
+func parseJSONBody(c *gin.Context, obj interface{}) error {
+	const op = "PARSE_JSON_BODY"
+	if err := c.ShouldBindBodyWithJSON(obj); err != nil {
+		log.Printf("[%s] Ошибка парсинга JSON: %v", op, err)
+		return fmt.Errorf("недопустимый формат ввода")
+	}
+	return nil
+}
+
+func (s *Server) generateUniqueUUID(checkFn func(uuid.UUID) (bool, error)) (uuid.UUID, error) {
+	const op = "GENERATE_UNIQUE_UUID"
+	for i := 0; i < 5; i++ { // max retries
+		uid := uuid.New()
+		exists, err := checkFn(uid)
+		if err != nil {
+			log.Printf("[%s] Ошибка проверки UUID: %v", op, err)
+			continue
+		}
+		if !exists {
+			return uid, nil
+		}
+	}
+	err := fmt.Errorf("не удалось сгенерировать уникальный UUID за 5 попыток")
+	log.Printf("[%s] Ошибка: %v", op, err)
+	return uuid.Nil, err
 }
