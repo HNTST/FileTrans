@@ -4,24 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Личный кабинет | Обменник файлов</title>
-  <!-- Bootstrap CSS -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
           rel="stylesheet"
   />
-  <!-- Font Awesome иконки -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           rel="stylesheet"
   />
-  <!-- Animate.css для анимаций -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
           rel="stylesheet"
   />
   <style>
     :root {
-      /* Основные цвета */
       --primary-color: #343a40;
       --secondary-color: #212529;
       --success-color: #5a6268;
@@ -44,7 +40,7 @@
 
     .sticky-wrapper {
       position: sticky;
-      top: 20px; /* Расстояние от верха */
+      top: 20px; 
       align-self: flex-start;
       z-index: 100;
     }
@@ -516,7 +512,6 @@
       font-size: 0.8rem;
       color: #666;
     }
-    /* Стили для темной темы */
     .dark-mode {
       --bg-color: #121212;
       --card-bg: #1e1e1e;
@@ -527,6 +522,25 @@
       --input-text: #f8f9fa;
       --icon-color: #ccc;
     }
+
+    .dark-mode .search-input::placeholder {
+  color: var(--muted-text); 
+}
+    .dark-mode .file-size {
+  color: var(--muted-text); 
+}
+
+
+.dark-mode .file-upload-area {
+  color: var(--muted-text); 
+}
+
+.dark-mode .text-muted,
+.dark-mode .file-size {
+  color: var(--muted-text) !important;
+}
+
+
 
     .dark-mode {
       background-color: var(--bg-color);
@@ -656,7 +670,6 @@
 <!-- Основной контент -->
 <div class="container main-container">
   <div class="row">
-    <!-- Карточка загрузки файлов -->
     <div class="col-lg-4 mb-4 sticky-wrapper">
       <div class="card h-100">
         <div class="card-header">
@@ -703,7 +716,6 @@
         </div>
       </div>
     </div>
-
     <!-- Карточка со списком файлов -->
     <div class="col-lg-8">
       <div class="card">
@@ -723,7 +735,6 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- Поиск и сортировка -->
           <div class="search-bar">
             <input
                     type="text"
@@ -743,8 +754,6 @@
               <option value="size_desc">По размеру (Убывание)</option>
             </select>
           </div>
-
-          <!-- Список файлов -->
           <div id="files-container">
             <ul id="files-list" class="files-list"></ul>
           </div>
@@ -753,7 +762,6 @@
     </div>
   </div>
 </div>
-
 <!-- Overlay для полноразмерных изображений -->
 <div class="image-overlay" id="image-overlay">
   <div class="overlay-content">
@@ -774,18 +782,15 @@
     <button class="close-overlay" onclick="closePdfOverlay()">
       <i class="fas fa-times"></i>
     </button>
+
     <div class="d-flex align-items-center justify-content-center flex-wrap gap-3">
-      <!-- Кнопка "Назад" -->
       <button class="nav-button prev" id="prevPdfPage" disabled>
         <i class="fas fa-chevron-left"></i>
       </button>
-
-      <!-- Контейнер для масштабируемого изображения -->
       <div class="zoom-container">
         <img id="pdfPageImage" src="" alt="PDF Page" class="img-fluid zoomable-img" style="max-height: 70vh;">
       </div>
 
-      <!-- Изображение страницы PDF -->
       <div class="text-center">
         <img id="pdfPageImage" src="" alt="PDF Page" class="img-fluid" style="max-height: 70vh; border: 1px solid #ccc;">
         <div class="mt-2">
@@ -793,11 +798,9 @@
         </div>
       </div>
 
-      <!-- Кнопка "Вперед" -->
       <button class="nav-button next" id="nextPdfPage" disabled>
         <i class="fas fa-chevron-right"></i>
       </button>
-      <!-- Кнопки масштабирования -->
       <div class="zoom-controls">
         <button class="btn btn-sm btn-light zoom-btn" onclick="zoomPdfImage(0.1)">+</button>
         <button class="btn btn-sm btn-light zoom-btn" onclick="zoomPdfImage(-0.1)">−</button>
@@ -807,15 +810,12 @@
     </div>
   </div>
 </div>
-<!-- Контейнер для toast-уведомлений -->
+
 <div class="toast-container" id="toast-container"></div>
 
-<!-- Bootstrap JS с Popper -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-<!-- Основной JavaScript -->
 <script>
-  // Инициализация данных пользователя
   const userLogin = localStorage.getItem("userLogin");
   const userUuid = localStorage.getItem("userUuid");
 
@@ -827,33 +827,28 @@
     throw new Error("Не найдены данные пользователя в localStorage");
   }
 
-  // Установка данных пользователя
   document.getElementById("user-login").innerText = userLogin;
   document.getElementById("user-uuid").value = userUuid;
   document.getElementById("user-avatar").innerText = userLogin
           .charAt(0)
           .toUpperCase();
 
-  // Темная тема
   const themeToggle = document.getElementById("theme-toggle");
   themeToggle.addEventListener("change", function () {
     document.body.classList.toggle("dark-mode", this.checked);
     localStorage.setItem("darkMode", this.checked);
   });
 
-  // Проверка сохраненной темы
   if (localStorage.getItem("darkMode") === "true") {
     themeToggle.checked = true;
     document.body.classList.add("dark-mode");
   }
 
-  // Инициализация Drag & Drop
   const dropArea = document.getElementById("dropArea");
   const fileInput = document.getElementById("file-input");
   const selectedFileInfo = document.getElementById("selected-file-info");
   const selectedFileName = document.getElementById("selected-file-name");
 
-  // События для Drag & Drop
   ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
     dropArea.addEventListener(eventName, preventDefaults, false);
   });
@@ -896,7 +891,6 @@
       selectedFileName.textContent = file.name;
       selectedFileInfo.style.display = "block";
 
-      // Определяем иконку по типу файла
       const fileType = file.type.split("/")[0];
       let iconClass = "fa-file";
 
@@ -924,7 +918,6 @@
     }
   }
 
-  // Функция загрузки файла
   async function uploadFile() {
     const fileInput = document.getElementById("file-input");
     const uuid = document.getElementById("user-uuid").value;
@@ -986,7 +979,7 @@
                   `;
           showToast("Успешно", "Файл успешно загружен", "success");
           loadUserFiles();
-          // Сбрасываем форму
+
           fileInput.value = "";
           selectedFileInfo.style.display = "none";
         } catch (e) {
@@ -1028,7 +1021,6 @@
     xhr.send(formData);
   }
 
-  // Функция показывает превью изображения по клику
   function togglePreview(uuid) {
     const file = allFiles.find((f) => f.uuid === uuid);
     if (!file) return;
@@ -1045,11 +1037,10 @@
     const container = document.getElementById(`preview-${uuid}`);
     if (!container) return;
 
-    // Просто переключаем видимость без анимации
     if (container.style.display === "none") {
-      container.style.display = "block"; // Моментальное появление
+      container.style.display = "block"; 
     } else {
-      container.style.display = "none"; // Моментальное исчезновение
+      container.style.display = "none"; 
     }
   }
 
@@ -1092,12 +1083,10 @@
             .trim();
     const sortType = document.getElementById("sort-select").value;
 
-    // Фильтрация
     let filtered = allFiles.filter((file) =>
             (file.fileName || file.file_name).toLowerCase().includes(query)
     );
 
-    // Сортировка
     switch (sortType) {
       case "name":
         filtered.sort((a, b) => {
@@ -1144,7 +1133,6 @@
     const downloadLink = `/download/${file.uuid}`;
     const originalName = file.fileName || file.file_name || "Без названия";
 
-    // Проверяем тип файла для иконки
     const ext = originalName.split(".").pop().toLowerCase();
     let iconClass = "fa-file";
 
@@ -1172,10 +1160,8 @@
       iconClass = "fa-file-audio";
     }
 
-    // Форматируем размер файла
     const fileSize = file.size ? formatSize(file.size) : "—";
 
-    // HTML элемента файла
     li.innerHTML = `
   <div class="d-flex align-items-center" onclick="togglePreview('${
             file.uuid
@@ -1230,7 +1216,6 @@
 
     return li;
   }
-  // Форматируем размер файла (например, 1024 → "1.00 КБ")
   function formatSize(bytes) {
     const sizes = ["Б", "КБ", "МБ", "ГБ"];
     if (bytes === 0) return "0 Б";
@@ -1240,22 +1225,20 @@
     );
   }
 
-  // Принудительное скачивание файла с указанием оригинального имени
+
   function forceDownload(uuid, fileName) {
     const link = document.createElement("a");
     link.href = `/download/${uuid}`;
-    link.download = fileName; // Здесь мы задаем имя, которое браузер сохранит
+    link.download = fileName; 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
 
-  // Поиск по файлам
   function filterFiles() {
     applySortAndFilter();
   }
 
-  // Удаление файла
   async function deleteFile(uuid) {
     const confirmDelete = confirm(
             "Вы действительно хотите удалить этот файл?"
@@ -1268,7 +1251,7 @@
 
     if (response.ok) {
       showToast("Успех", "Файл удален", "success");
-      loadUserFiles(); // Обновляем список
+      loadUserFiles(); 
     } else {
       showToast("Ошибка", "Не удалось удалить файл", "error");
     }
@@ -1291,7 +1274,7 @@
 
     if (response.ok) {
       showToast("Успех", "Имя файла изменено", "success");
-      loadUserFiles(); // Обновляем список файлов
+      loadUserFiles(); 
     } else {
       const error = await response.text();
       showToast(
@@ -1306,7 +1289,6 @@
     const downloadLink = `${window.location.origin}/download/${uuid}`;
     const title = `Файл: ${fileName}`;
 
-    // Пытаемся использовать Web Share API
     if (navigator.share) {
       try {
         await navigator.share({
@@ -1317,14 +1299,13 @@
         showToast("Успех", "Файл успешно поделён", "success");
       } catch (error) {
         console.warn("Ошибка при вызове Web Share API:", error);
-        // Если пользователь отменил деление
         copyToClipboard(downloadLink, fileName);
       }
     } else {
-      // Если Web Share не поддерживается — копируем в буфер
       copyToClipboard(downloadLink, fileName);
     }
   }
+
   async function copyToClipboard(text, fileName) {
     try {
       await navigator.clipboard.writeText(text);
@@ -1335,7 +1316,6 @@
     }
   }
 
-  // Открытие полноразмерной копии изображения
   function openImageOverlay(src) {
     const overlay = document.getElementById("image-overlay");
     const img = document.getElementById("overlay-img");
@@ -1352,7 +1332,6 @@
     img.src = "";
   }
 
-  // Глобальные переменные для управления PDF
   let currentPdfUuid = null;
   let currentPdfPage = 1;
   let totalPdfPages = 1;
@@ -1363,10 +1342,8 @@
     currentPdfPage = 1;
     totalPdfPages = 1;
 
-    // Загрузка первой страницы
     loadPdfPage(currentPdfPage);
 
-    // Показываем оверлей
     const overlay = document.getElementById('pdfOverlay');
     overlay.classList.add('active');
   }
@@ -1376,7 +1353,6 @@
     const overlay = document.getElementById('pdfOverlay');
     overlay.classList.remove('active');
 
-    // Сбрасываем изображение, масштаб и позицию
     const img = document.getElementById('pdfPageImage');
     img.src = '';
     img.style.transform = 'scale(1)';
@@ -1487,11 +1463,9 @@
     document.removeEventListener('touchend', endDrag);
   }
 
-  // Привязываем событие к изображению
   document.getElementById('pdfPageImage')?.addEventListener('mousedown', startDrag);
   document.getElementById('pdfPageImage')?.addEventListener('touchstart', startDrag, { passive: false });
 
-  // Масштабирование колесиком мыши (опционально)
   document.getElementById('pdfPageImage').addEventListener('wheel', function(e) {
     e.preventDefault();
     if (e.deltaY < 0) {
@@ -1525,13 +1499,11 @@
             });
   }
 
-  // Обновление состояния кнопок навигации
   function updatePdfNavButtons() {
     document.getElementById('prevPdfPage').disabled = currentPdfPage <= 1;
     document.getElementById('nextPdfPage').disabled = currentPdfPage >= totalPdfPages;
   }
 
-  // Обработчики событий для кнопок навигации
   document.getElementById('prevPdfPage').addEventListener('click', () => {
     if (currentPdfPage > 1) {
       loadPdfPage(currentPdfPage - 1);
@@ -1544,7 +1516,6 @@
     }
   });
 
-  // Показ Toast-уведомлений
   function showToast(title, message, type) {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
