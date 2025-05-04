@@ -1,551 +1,19 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Вход / Регистрация | Обменник файлов</title>
-  <!-- Bootstrap CSS -->
-  <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
-          rel="stylesheet"
-  />
-  <!-- Font Awesome иконки -->
-  <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          rel="stylesheet"
-  />
-  <!-- Animate.css для анимаций -->
-  <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-          rel="stylesheet"
-  />
-  <style>
-    body {
-      background: linear-gradient(135deg, #343a40 0%, #212529 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: #495057;
-    }
-
-    .card {
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-      backdrop-filter: blur(10px);
-      max-width: 500px;
-      width: 100%;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      border: none;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-    }
-
-    .form-control {
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #dee2e6;
-      transition: all 0.3s;
-      background-color: #f8f9fa;
-    }
-
-    .form-control:focus {
-      box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.25);
-      border-color: #6c757d;
-      background-color: #fff;
-    }
-
-    .tab-content {
-      padding: 30px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(to right, #5a6268, #6c757d);
-      border: none;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-weight: 500;
-      transition: all 0.3s;
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(to right, #495057, #5a6268);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
-    }
-
-    .nav-link {
-      color: #6c757d;
-      font-weight: 500;
-      padding: 15px 20px;
-      position: relative;
-      transition: all 0.3s;
-    }
-
-    .nav-link.active {
-      color: #495057;
-      background: transparent;
-      border-color: transparent;
-    }
-
-    .nav-link.active::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 20%;
-      width: 60%;
-      height: 3px;
-      background: #6c757d;
-      border-radius: 3px;
-    }
-
-    .input-group-text {
-      background: #f8f9fa;
-      border-right: none;
-      border-radius: 8px 0 0 8px;
-      color: #6c757d;
-      width: 40px; /* Фиксированная ширина */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .password-container .form-control {
-      border-left: none;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .logo {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      border-radius: 16px;
-      margin: 0 auto 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .form-label {
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: #495057;
-    }
-
-    .response-container {
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease-out;
-    }
-
-    .response-container.show {
-      max-height: 500px;
-    }
-
-    #forms-container {
-      max-width: 500px;
-      width: 100%;
-    }
-
-    .card-body {
-      padding: 0;
-    }
-
-    .text-center.pt-4 {
-      padding-top: 1.5rem !important;
-    }
-
-    h3.mb-3 {
-      color: #495057;
-      font-weight: 600;
-    }
-
-    h4.text-center.mb-4 {
-      color: #495057;
-      font-weight: 500;
-    }
-
-    .nav-tabs {
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    /* Исправление проблем с анимациями */
-    .animate__fadeIn {
-      animation-duration: 0.5s;
-    }
-
-    .animate__fadeOut {
-      animation-duration: 0.3s;
-    }
-  </style>
-</head>
-<body>
-<div id="forms-container" class="animate__animated animate__fadeIn">
-  <div class="card bg-white">
-    <div class="card-body">
-      <div class="text-center pt-4">
-        <div class="logo">
-          <i class="fas fa-exchange-alt"></i>
-        </div>
-        <h3 class="mb-3">Обменник файлов</h3>
-      </div>
-
-      <!-- Tabs навигация -->
-      <ul class="nav nav-tabs nav-fill" id="authTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button
-                  class="nav-link active"
-                  id="signin-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#signin"
-                  type="button"
-                  role="tab"
-                  aria-controls="signin"
-                  aria-selected="true"
-          >
-            <i class="fas fa-sign-in-alt me-2"></i>Вход
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-                  class="nav-link"
-                  id="signup-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#signup"
-                  type="button"
-                  role="tab"
-                  aria-controls="signup"
-                  aria-selected="false"
-          >
-            <i class="fas fa-user-plus me-2"></i>Регистрация
-          </button>
-        </li>
-      </ul>
-
-      <!-- Содержимое табов -->
-      <div class="tab-content">
-        <!-- Форма входа -->
-        <div
-                class="tab-pane fade show active animate__animated animate__fadeIn"
-                id="signin"
-                role="tabpanel"
-                aria-labelledby="signin-tab"
-        >
-          <h4 class="text-center mb-4">Добро пожаловать!</h4>
-          <form id="signin-form">
-            <div class="mb-3">
-              <label for="login-login" class="form-label">Логин</label>
-              <div class="input-group">
-                <input
-                        type="text"
-                        class="form-control"
-                        id="login-login"
-                        placeholder="Введите ваш логин"
-                        required
-                />
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label for="login-password" class="form-label">Пароль</label>
-              <div class="input-group password-container">
-                <input
-                        type="password"
-                        class="form-control"
-                        id="login-password"
-                        placeholder="Введите ваш пароль"
-                        required
-                />
-              </div>
-            </div>
-
-            <div class="d-grid gap-2">
-              <button
-                      type="button"
-                      class="btn btn-primary"
-                      onclick="signIn()"
-              >
-                <i class="fas fa-sign-in-alt me-2"></i>Войти
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Форма регистрации -->
-        <div
-                class="tab-pane fade animate__animated animate__fadeIn"
-                id="signup"
-                role="tabpanel"
-                aria-labelledby="signup-tab"
-        >
-          <h4 class="text-center mb-4">Создайте аккаунт</h4>
-          <form id="signup-form">
-            <div class="mb-3">
-              <label for="reg-login" class="form-label">Логин</label>
-              <div class="input-group">
-                <input
-                        type="text"
-                        class="form-control"
-                        id="reg-login"
-                        placeholder="Выберите логин"
-                        required
-                />
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label for="reg-password" class="form-label">Пароль</label>
-              <div class="input-group password-container">
-                <input
-                        type="password"
-                        class="form-control"
-                        id="reg-password"
-                        placeholder="Создайте пароль"
-                        required
-                />
-              </div>
-            </div>
-
-            <div class="d-grid gap-2">
-              <button
-                      type="button"
-                      class="btn btn-primary"
-                      onclick="signUp()"
-              >
-                <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Контейнер для ответа сервера -->
-      <div id="response" class="response-container mx-3 mb-3"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Bootstrap JS с Popper -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-
-<!-- Основной JavaScript -->
-<script>
-  // Функция запроса к серверу
-  async function request(url, method, body) {
-    const options = {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    };
-
-    const res = await fetch(url, options);
-    const data = await res.json();
-    return data;
-  }
-
-  // Функция регистрации
-  async function signUp() {
-    const login = document.getElementById("reg-login").value;
-    const password = document.getElementById("reg-password").value;
-
-    if (!login || !password) {
-      displayResponse("Ошибка", {
-        message: "Пожалуйста, заполните все поля",
-      });
-      return;
-    }
-
-    // Показываем анимацию загрузки
-    document.querySelector("#signup button").innerHTML =
-            '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Обработка...';
-    document.querySelector("#signup button").disabled = true;
-
-    try {
-      const result = await request("/register", "POST", {
-        login,
-        password,
-      });
-      displayResponse("Регистрация", result);
-
-      if (result.uuid) {
-        localStorage.setItem("userLogin", login);
-        localStorage.setItem("userUuid", result.uuid);
-        showSuccessMessage("Регистрация успешна! Перенаправление...");
-        setTimeout(() => {
-          window.location.href = "static/user.html";
-        }, 1500);
-      } else {
-        // Возвращаем кнопку в исходное состояние
-        document.querySelector("#signup button").innerHTML =
-                '<i class="fas fa-user-plus me-2"></i>Зарегистрироваться';
-        document.querySelector("#signup button").disabled = false;
-      }
-    } catch (error) {
-      displayResponse("Ошибка", {
-        message: "Произошла ошибка при обработке запроса",
-      });
-      // Возвращаем кнопку в исходное состояние
-      document.querySelector("#signup button").innerHTML =
-              '<i class="fas fa-user-plus me-2"></i>Зарегистрироваться';
-      document.querySelector("#signup button").disabled = false;
-    }
-  }
-
-  // Функция входа
-  async function signIn() {
-    const login = document.getElementById("login-login").value;
-    const password = document.getElementById("login-password").value;
-
-    if (!login || !password) {
-      displayResponse("Ошибка", {
-        message: "Пожалуйста, заполните все поля",
-      });
-      return;
-    }
-
-    // Показываем анимацию загрузки
-    document.querySelector("#signin button").innerHTML =
-            '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Выполняется вход...';
-    document.querySelector("#signin button").disabled = true;
-
-    try {
-      const result = await request("/signInPage", "POST", {
-        login,
-        password,
-      });
-      displayResponse("Вход", result);
-
-      if (result.uuid) {
-        localStorage.setItem("userLogin", login);
-        localStorage.setItem("userUuid", result.uuid);
-        showSuccessMessage("Вход выполнен успешно! Перенаправление...");
-        setTimeout(() => {
-          window.location.href = "static/user.html";
-        }, 1500);
-      } else {
-        // Возвращаем кнопку в исходное состояние
-        document.querySelector("#signin button").innerHTML =
-                '<i class="fas fa-sign-in-alt me-2"></i>Войти';
-        document.querySelector("#signin button").disabled = false;
-      }
-    } catch (error) {
-      displayResponse("Ошибка", {
-        message: "Произошла ошибка при обработке запроса",
-      });
-      // Возвращаем кнопку в исходное состояние
-      document.querySelector("#signin button").innerHTML =
-              '<i class="fas fa-sign-in-alt me-2"></i>Войти';
-      document.querySelector("#signin button").disabled = false;
-    }
-  }
-
-  // Отображение ответа сервера
-  function displayResponse(title, data) {
-    const container = document.getElementById("response");
-
-    let statusClass = "text-info";
-    if (data.uuid) {
-      statusClass = "text-success";
-    } else if (
-            data.error ||
-            (data.message && data.message.includes("ошибка"))
-    ) {
-      statusClass = "text-danger";
-    }
-
-    container.innerHTML = `
-        <div class="d-flex align-items-center mb-2">
-          <h5 class="mb-0 ${statusClass}">
-            <i class="fas ${
-            data.uuid ? "fa-check-circle" : "fa-info-circle"
-    } me-2"></i>${title}
-          </h5>
-        </div>
-        <div class="mt-2 text-break">
-          <pre class="mb-0" style="background: transparent; font-family: inherit; font-size: 0.9rem;">${JSON.stringify(
-            data,
-            null,
-            2
-    )}</pre>
-        </div>
-      `;
-
-    container.classList.add("show", "animate__animated", "animate__fadeIn");
-  }
-
-  // Показ сообщения об успехе
-  function showSuccessMessage(message) {
-    const container = document.getElementById("response");
-    container.innerHTML = `
-        <div class="alert alert-success animate__animated animate__fadeIn" role="alert">
-          <i class="fas fa-check-circle me-2"></i>${message}
-        </div>
-      `;
-    container.classList.add("show");
-  }
-
-  // Переход на вкладку регистрации при нажатии
-  document
-          .getElementById("signup-tab")
-          .addEventListener("click", function (e) {
-            document.getElementById("signin").classList.remove("animate__fadeIn");
-            document.getElementById("signin").classList.add("animate__fadeOut");
-
-            setTimeout(() => {
-              document
-                      .getElementById("signin")
-                      .classList.remove("animate__fadeOut");
-              document.getElementById("signup").classList.add("animate__fadeIn");
-            }, 200);
-          });
-
-  // Переход на вкладку входа при нажатии
-  document
-          .getElementById("signin-tab")
-          .addEventListener("click", function (e) {
-            document.getElementById("signup").classList.remove("animate__fadeIn");
-            document.getElementById("signup").classList.add("animate__fadeOut");
-
-            setTimeout(() => {
-              document
-                      .getElementById("signup")
-                      .classList.remove("animate__fadeOut");
-              document.getElementById("signin").classList.add("animate__fadeIn");
-            }, 200);
-          });<!DOCTYPE html>
   <html lang="ru">
-          <head>
+          
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Вход / Регистрация | Обменник файлов</title>
-  <!-- Bootstrap CSS -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
           rel="stylesheet"
   />
-  <!-- Font Awesome иконки -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           rel="stylesheet"
   />
-  <!-- Animate.css для анимаций -->
   <link
           href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
           rel="stylesheet"
@@ -642,16 +110,17 @@
     border-right: none;
     border-radius: 8px 0 0 8px;
     color: #6c757d;
-    width: 40px; /* Фиксированная ширина */
+    width: 40px; 
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
     .password-container .form-control {
-          border-left: none;
-    border-radius: 0 8px 8px 0;
-  }
+    border-left: 1px solid #dee2e6; 
+    border-radius: 8 8px 8px 8;
+    padding-right: 1rem; 
+}
 
     .logo {
     width: 80px;
@@ -715,13 +184,12 @@
           border-bottom: 1px solid #dee2e6;
   }
 
-    /* Исправление проблем с анимациями */
     .animate__fadeIn {
           animation-duration: 0.5s;
   }
 
     .animate__fadeOut {
-          animation-duration: 0.3s;
+          animation-duration: 0.3s; 
   }
   </style>
   </head>
@@ -735,8 +203,6 @@
           </div>
           <h3 class="mb-3">Обменник файлов</h3>
         </div>
-
-        <!-- Tabs навигация -->
         <ul class="nav nav-tabs nav-fill" id="authTabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button
@@ -768,9 +234,7 @@
           </li>
         </ul>
 
-        <!-- Содержимое табов -->
         <div class="tab-content">
-          <!-- Форма входа -->
           <div
                   class="tab-pane fade show active animate__animated animate__fadeIn"
                   id="signin"
@@ -791,7 +255,7 @@
                   />
                 </div>
               </div>
-
+              
               <div class="mb-4">
                 <label for="login-password" class="form-label">Пароль</label>
                 <div class="input-group password-container">
@@ -864,19 +328,14 @@
             </form>
           </div>
         </div>
-
-        <!-- Контейнер для ответа сервера -->
-        <div id="response" class="response-container mx-3 mb-3"></div>
+        <div id="response" class="response-container mx-3 mb-3"> </div>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap JS с Popper -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-<!-- Основной JavaScript -->
 <script>
-  // Функция запроса к серверу
   async function request(url, method, body) {
     const options = {
       method,
@@ -891,7 +350,6 @@
     return data;
   }
 
-  // Функция регистрации
   async function signUp() {
     const login = document.getElementById("reg-login").value;
     const password = document.getElementById("reg-password").value;
@@ -903,7 +361,6 @@
       return;
     }
 
-    // Показываем анимацию загрузки
     document.querySelector("#signup button").innerHTML =
             '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Обработка...';
     document.querySelector("#signup button").disabled = true;
@@ -923,7 +380,6 @@
           window.location.href = "static/user.html";
         }, 1500);
       } else {
-        // Возвращаем кнопку в исходное состояние
         document.querySelector("#signup button").innerHTML =
                 '<i class="fas fa-user-plus me-2"></i>Зарегистрироваться';
         document.querySelector("#signup button").disabled = false;
@@ -932,14 +388,12 @@
       displayResponse("Ошибка", {
         message: "Произошла ошибка при обработке запроса",
       });
-      // Возвращаем кнопку в исходное состояние
       document.querySelector("#signup button").innerHTML =
               '<i class="fas fa-user-plus me-2"></i>Зарегистрироваться';
       document.querySelector("#signup button").disabled = false;
     }
   }
 
-  // Функция входа
   async function signIn() {
     const login = document.getElementById("login-login").value;
     const password = document.getElementById("login-password").value;
@@ -951,7 +405,6 @@
       return;
     }
 
-    // Показываем анимацию загрузки
     document.querySelector("#signin button").innerHTML =
             '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Выполняется вход...';
     document.querySelector("#signin button").disabled = true;
@@ -971,7 +424,6 @@
           window.location.href = "static/user.html";
         }, 1500);
       } else {
-        // Возвращаем кнопку в исходное состояние
         document.querySelector("#signin button").innerHTML =
                 '<i class="fas fa-sign-in-alt me-2"></i>Войти';
         document.querySelector("#signin button").disabled = false;
@@ -980,48 +432,47 @@
       displayResponse("Ошибка", {
         message: "Произошла ошибка при обработке запроса",
       });
-      // Возвращаем кнопку в исходное состояние
       document.querySelector("#signin button").innerHTML =
               '<i class="fas fa-sign-in-alt me-2"></i>Войти';
       document.querySelector("#signin button").disabled = false;
     }
   }
 
-  // Отображение ответа сервера
   function displayResponse(title, data) {
-    const container = document.getElementById("response");
+  const container = document.getElementById("response");
+  let statusClass = "text-info";
+  let message = "";
 
-    let statusClass = "text-info";
-    if (data.uuid) {
-      statusClass = "text-success";
-    } else if (
-            data.error ||
-            (data.message && data.message.includes("ошибка"))
-    ) {
-      statusClass = "text-danger";
-    }
-
-    container.innerHTML = `
-        <div class="d-flex align-items-center mb-2">
-          <h5 class="mb-0 ${statusClass}">
-            <i class="fas ${
-            data.uuid ? "fa-check-circle" : "fa-info-circle"
-    } me-2"></i>${title}
-          </h5>
-        </div>
-        <div class="mt-2 text-break">
-          <pre class="mb-0" style="background: transparent; font-family: inherit; font-size: 0.9rem;">${JSON.stringify(
-            data,
-            null,
-            2
-    )}</pre>
-        </div>
-      `;
-
-    container.classList.add("show", "animate__animated", "animate__fadeIn");
+  if (data.message) {
+    message = data.message;
+  } else if (data.error) {
+    message = data.error;
+  } else {
+    message = "Произошла неизвестная ошибка";
   }
 
-  // Показ сообщения об успехе
+  if (data.uuid) {
+    statusClass = "text-success";
+  } else if (data.error || (message && message.toLowerCase().includes("ошибка"))) {
+    statusClass = "text-danger";
+  }
+
+  container.innerHTML = `
+    <div class="d-flex align-items-center mb-2">
+      <h5 class="mb-0 ${statusClass}">
+        <i class="fas ${
+          data.uuid ? "fa-check-circle" : "fa-info-circle"
+        } me-2"></i>${title}
+      </h5>
+    </div>
+    <div class="mt-2 text-break">
+      <p class="mb-0">${message}</p>
+    </div>
+  `;
+
+  container.classList.add("show", "animate__animated", "animate__fadeIn");
+}
+
   function showSuccessMessage(message) {
     const container = document.getElementById("response");
     container.innerHTML = `
